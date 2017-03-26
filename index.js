@@ -4,7 +4,7 @@ var http = require('http');
 
 var bot = new Discord.Client({
   autorun: true,
-  token: "MjY5MTg3NTg1MjIwMjgwMzIw.C7hQmw.HFPhfQgP-ELH8zKOEpUJFEahViE"
+  token: ""
 });
 
 var servers ;
