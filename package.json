@@ -1,14 +1,22 @@
 {
-  "name": "bot_test",
-  "version": "1.0.0",
-  "description": "a discord test bot",
+  "name": "discordbot",
+  "version": "2.0.0",
+  "description": "a discord bot",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "leon in 't Veld",
+  "keywords": [
+    "discord",
+    "bot",
+	"cleverbot"
+  ],
+  "author": "Leon in 't Veld",
   "license": "ISC",
   "dependencies": {
-    "discord.io": "^2.5.1"
+    "cleverbot-node": "^0.3.6",
+    "discord.js": "^11.0.0",
+    "node-opus": "^0.2.4",
+    "uws": "^0.14.0"
   }
 }

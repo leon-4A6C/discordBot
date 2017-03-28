@@ -1,0 +1,47 @@
+[
+  {
+    "title": "ping pong",
+    "command": "ping",
+    "description": "sends back pong"
+  },
+  {
+    "title": "marco polo",
+    "command": "marco",
+    "description": "sends back polo"
+  },
+  {
+    "title": "spam someone",
+    "command":"spam @mention_someone -amount- \"spam text here\"",
+    "description": "spams someone with the text you give it for the amount of messages"
+  },
+  {
+    "title": "talk with cleverbot",
+    "command":"@name_of_bot \"message\"",
+    "description": "have a conversation with cleverbot"
+  },
+  {
+    "title": "random cat",
+    "command": "type cat, pussy, poekie or miauw",
+    "description": "sends a picture of a random cat from random.cat"
+  },
+  {
+    "title":"delete messages",
+    "command":"deleteMessages",
+    "description": "deletes all the messages from this chat"
+  },
+  {
+    "title":"delete channel",
+    "command":"abort",
+    "description": "deletes this channel"
+  },
+  {
+    "title":"create channel",
+    "command":"create new_channel_name",
+    "description": "creates a channel with the given name"
+  },
+  {
+    "title":"help",
+    "command": "help",
+    "description": "sends this helpfull data"
+  }
+]

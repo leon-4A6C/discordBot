@@ -1,121 +1,105 @@
-var Discord = require('discord.io');
-var fs = require('fs');
-var http = require('http');
+const Discord = require("discord.js");
+const bot = new Discord.Client();
+const http = require('http');
+const Cleverbot = require("cleverbot-node");
+const helpFile = require('./help');
 
-var bot = new Discord.Client({
-  autorun: true,
-  token: ""
+var cleverbots = [new Cleverbot()];
+cleverbots[0].configure({botapi: "TOKEN"});
+var sessions = [{username: "peteadawdadawdawdawdwadrgbrrr", cleverbotId: 0}];
+bot.on('ready', () => {
+  console.log("logged in as " + bot.user.username + "!");
 });
 
-var servers ;
-var channels = [];
-
-bot.on('ready', function(event) {
-  console.log('Logged in as %s - %s - is bot %s\n', bot.username, bot.id, bot.bot);
-  servers = Object.getOwnPropertyNames(bot.servers);
-  for (var i = 0; i < servers.length; i++) {
-    channels.push(Object.getOwnPropertyNames(bot.servers[servers[i]]["channels"]));
-  }
-  console.log("channels:");
-  console.log(channels);
-});
-
-bot.on('message', function(user, userID, channelID, message, event) {
-  if (userID != bot.id) {
-    if (message == "ping") {
-      bot.sendMessage({
-        to: channelID,
-        message: "pong",
-        typing: true
-      });
+bot.on("message", msg => {
+  if (msg.author != bot.user) { // if this is not here it would respond to itself
+    if (contains("ping", msg.content)) {
+      msg.channel.send("pong");
     }
-    if (message == "deleteMessages") {
-      bot.getMessages({
-        channelID: channelID
-      }, function(error, messageArray) {
-        messageIDs = [];
-        for (var i = 0; i < messageArray.length; i++) {
-          messageIDs.push(messageArray[i].id);
-        }
-        bot.deleteMessages({
-          channelID: channelID,
-          messageIDs: messageIDs
-        }, function(error) {
-          console.error(error);
-        });
-      });
+    if (contains("marco", msg.content)) {
+      msg.channel.send("polo");
     }
-    if (message == "getServers") {
-      console.log(bot.servers);
+    if (msg.content === "help") {
+      var message = "";
+      message += "__**test bot 2.0 help**__";
+      for (var i = 0; i < helpFile.length; i++) {
+        message+="\n\n***"+helpFile[i].title+"***\ncommand: `"+helpFile[i].command+"`\n*"+helpFile[i].description+"*";
+      }
+      msg.author.send(message);
     }
-    if (getWord(message) == "join") {
-      var voiceChannelId;
-      for (var i = 0; i < servers.length; i++) {
-        for (var j = 0; j < channels[i].length; j++) {
-          if (channelID == channels[i][j]) {
-            for (var k = 0; k < channels[i].length; k++) {
-              if (getWord(message, 1) == bot.servers[servers[i]]['channels'][channels[i][k]]['name'] && bot.servers[servers[i]]['channels'][channels[i][k]]['type'] == 'voice') {
-                voiceChannelId = channels[i][k];
-              }
-            }
-          }
+    if (getWord(msg.content) === "spam") {
+      var mentions = msg.mentions.users.array();
+      var amount = between("-", msg.content);
+      var message = between('"', msg.content);
+      if (msg.mentions.everyone === true) {
+        // TODO: spam iedereen
+      }
+      for (var i = 0; i < mentions.length; i++) {
+        msg.channel.send(mentions[i].username +  " is being spammed!");
+        for (var j = 0; j < amount; j++) {
+          mentions[i].send(message);
         }
       }
-      if (voiceChannelId == null) {
-        bot.sendMessage({
-          to: channelID,
-          message: 'invalid channel name'
+    }
+    if (getWord(msg.content) === "<@"+bot.user.id+">") {
+      var found = false;
+      for (var i = 0; i < sessions.length; i++) {
+        if (sessions[i].username === msg.author.username) {
+          talkBot(between('"', msg.content), sessions[i].cleverbotId);
+          found = true;
+          break;
+        }
+      }
+      if (!found) {
+        sessions.push({username: msg.author.username, cleverbotId: cleverbots.length});
+        cleverbots.push(new Cleverbot());
+        cleverbots[cleverbots.length-1].configure({botapi: "TOKEN"});
+        talkBot(between('""', msg.content), cleverbots.length-1);
+      }
+      function talkBot(message, id) {
+        cleverbots[id].write(message, function (response) {
+          msg.reply(response.output);
+        });
+      }
+    }
+    if (getWord(msg.content) == "deleteMessages") {
+      var name = getWord(msg.content, 1);
+      if (name == getWord(msg.content, 0)) {
+        name = msg.channel.name;
+      }
+      var guild = msg.guild;
+      guild.createChannel('new-'+name, 'text')
+        .then(channel => {
+          channel.send(`Created new channel ${channel}`);
+          msg.channel.delete()
+            .then(console.log("channel deleted")) // success
+            .catch(console.error); // log error
+          channel.setName(name)
+            .then(newChannel => console.log(`Channel's new name is ${newChannel.name}`))
+            .catch(console.error);
         })
-      }else {
-        bot.joinVoiceChannel(voiceChannelId, function(error, events) {
-          if (error) {
-            console.error(error);
-          }
-          bot.getAudioContext(voiceChannelId, function(error, stream) {
-            if (error) {
-              console.error(error);
-            }
-
-            var rStream = fs.createReadStream('music/timeflies.mp3').pipe(stream, {end: false});
-
-            stream.on('done', function() {
-              console.log("done!");
-            });
-          });
-        });
+        .catch(console.error);
+    }
+    if (getWord(msg.content) == "abort") {
+      var name = getWord(msg.content, 1);
+      msg.channel.delete()
+        .then(console.log("channel deleted")) // success
+        .catch(console.error); // log error
+    }
+    if (getWord(msg.content) == "create") {
+      var name = getWord(msg.content, 1);
+      if (name == getWord(msg.content, 0)) {
+        msg.reply("give me a name as second parameter!");
+      } else {
+        msg.guild.createChannel(name, 'text')
+          .then(channel => channel.send(`successfuly created ${channel}`))
+          .catch(console.error);
       }
     }
-    if (getWord(message) == "play" && getWord(message, 1) == "music") {
-      bot.sendMessage({
-        to: channelID,
-        message: "kan nog niet"
-      })
+    if (msg.content === "test") {
+      console.log(msg);
     }
-    if (getWord(message) == "leave") {
-      var voiceChannelId;
-      for (var i = 0; i < servers.length; i++) {
-        for (var j = 0; j < channels[i].length; j++) {
-          if (channelID == channels[i][j]) {
-            for (var k = 0; k < channels[i].length; k++) {
-              if (getWord(message, 1) == bot.servers[servers[i]]['channels'][channels[i][k]]['name']&& bot.servers[servers[i]]['channels'][channels[i][k]]['type'] == 'voice') {
-                voiceChannelId = channels[i][k];
-              }
-            }
-          }
-        }
-      }
-      if (voiceChannelId == null) {
-        bot.sendMessage({
-          to: channelID,
-          message: "invalid channel name"
-        });
-      }else {
-        bot.leaveVoiceChannel(voiceChannelId, function() {
-
-        });
-      }
-    }
-    if (contains("cat", message) || contains("miauw", message) || contains("pussy", message)) {
+    if (contains("cat", msg.content) || contains("miauw", msg.content) || contains("pussy", msg.content) || contains("poekie", msg.content)) {
       var url = 'http://random.cat/meow';
 
       http.get(url, function(res){
@@ -128,36 +112,16 @@ bot.on('message', function(user, userID, channelID, message, event) {
         res.on('end', function(){
           var response = JSON.parse(body);
           console.log("Got a response: ", response.file);
-          bot.sendMessage({
-            to: channelID,
-            message: response.file
-          });
+          msg.channel.send(response.file);
         });
       }).on('error', function(e){
-        console.log("Got an error: ", e);
+        console.error("Got an error: ", e);
       });
     }
-    if (getWord(message) == "spam") {
-      var id = getWord(message, 1);
-      id = id.substr(2, id.length-3);
-      var msg = between('"', message);
-      var amount = getWord(message, 2);
-      for (var i = 0; i < amount; i++) {
-        var end = Date.now() + 1000;
-        while (Date.now() < end) {
-
-        }
-        bot.sendMessage({
-          to: id,
-          message: msg
-        }, function(error, events) {
-          console.error(error);
-          console.log(events);
-        });
-      }
-    }
-  }
+  } // end of if not bot check
 });
+
+bot.login("TOKEN");
 
 function getWord(str, count) {
   if (str.indexOf(' ') === -1) {
@@ -168,7 +132,6 @@ function getWord(str, count) {
     } else {
       for (var i = 0; i < count; i++) {
         str = str.substr(str.indexOf(' ')+1, str.length);
-        console.log(str, i, count, str.indexOf(" "));
         if (str.indexOf(' ') === -1) {
           return str
         } else if((count-1) === i) {
