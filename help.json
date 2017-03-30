@@ -40,6 +40,21 @@
     "description": "creates a channel with the given name"
   },
   {
+    "title":"play music",
+    "command":"play youtube_url",
+    "description": "creates a channel music channel if you haven't got one already and plays the song from the given url"
+  },
+  {
+    "title":"stop",
+    "command":"stop",
+    "description": "stops the music that's being played"
+  },
+  {
+    "title":"delete chat bot history",
+    "command":"deleteHistory",
+    "description": "deletes the chat bot's history from your conversation"
+  },
+  {
     "title":"help",
     "command": "help",
     "description": "sends this helpfull data"

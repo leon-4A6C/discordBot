@@ -2,17 +2,103 @@ const Discord = require("discord.js");
 const bot = new Discord.Client();
 const http = require('http');
 const Cleverbot = require("cleverbot-node");
+const fs = require("fs-extra");
+const youtubedl = require("youtube-dl");
+const ffmpeg = require("fluent-ffmpeg");
 const helpFile = require('./help');
 
-var cleverbots = [new Cleverbot()];
-cleverbots[0].configure({botapi: "TOKEN"});
-var sessions = [{username: "peteadawdadawdawdawdwadrgbrrr", cleverbotId: 0}];
+var discordToken("MjY5MTg3NTg1MjIwMjgwMzIw.C77dZg.nmePeTnY-tea4szEWbUGgpwuzpo");
+var cleverbotToken("CC1eu3DuNdYPcvSgJ4n2to4H6bg");
+
+var cleverbots = [{username: "peteadawdadawdawdawdwadrgbrrr", cleverbot: new Cleverbot()}];
+cleverbots[0].cleverbot.configure({botapi: cleverbotToken});
 bot.on('ready', () => {
   console.log("logged in as " + bot.user.username + "!");
 });
 
 bot.on("message", msg => {
   if (msg.author != bot.user) { // if this is not here it would respond to itself
+    if (getWord(msg.content) === "deleteHistory") {
+      var found = false;
+      for (var i = 0; i < cleverbots.length; i++) {
+        if (cleverbots[i].username === msg.author.username) {
+          found = true;
+          cleverbots.splice(i, 1);
+          break;
+        }
+      }
+      if (!found) {
+        msg.reply("you have got no chat history");
+      }
+    }
+    if (getWord(msg.content)==="play") {
+      var url = getWord(msg.content, 1);
+      if (url === getWord(msg.content)) {
+        msg.reply("you did not give me a link");
+      } else {
+        var channels = msg.guild.channels.array();
+        var found = false;
+        for (var i = 0; i < channels.length; i++) {
+          if(channels[i].type === "voice" && channels[i].name === "music") {
+            found = true;
+            join(channels[i]);
+          }
+        }
+        if (!found) {
+          msg.guild.createChannel("music", "voice")
+            .then(channel => {
+              msg.channel.send(`Created new channel ${channel}`);
+              join(channel);
+            })
+            .catch(console.error);
+        }
+        function join(channel) {
+          channel.join()
+          .then(connection => {
+            msg.channel.send('Connected!');
+            var video = youtubedl(url, ["--format=18"], {cwd:__dirname});
+            var filename = "";
+
+            video.on("info", function(info) {
+              filename = info._filename;
+              filename = filename.substr(filename.length-15, filename.length);
+              filename = filename.substr(0, filename.length-4);
+              video.pipe(fs.createWriteStream("./tmp/"+filename+".mp4"));
+              msg.channel.send("downloading!");
+            });
+
+            video.on("end", function() {
+              console.log("done downloading!");
+              ffmpeg("./tmp/"+filename+".mp4")
+                .toFormat("mp3")
+                .on("error", function(error) {
+                  console.error(error);
+                })
+                .on("end", function() {
+                  console.log("done! converting!");
+                  fs.unlink("./tmp/"+filename+".mp4", function() {
+                    console.log("done!");
+                  });
+                  const dispatcher = connection.playFile(__dirname+"/tmp/"+filename+".mp3", {volume:1});
+                  msg.channel.send("playing!");
+                })
+                .save("./tmp/"+filename+".mp3");
+            });
+          })
+          .catch(console.error);
+        }
+      }
+    }
+    if (getWord(msg.content)==="stop") {
+      // TODO: stop music and delete music
+      var channels = msg.guild.channels.array();
+      for (var i = 0; i < channels.length; i++) {
+        if(channels[i].type === "voice" && channels[i].name === "music") {
+          channels[i].leave();
+          msg.channel.send('Disconnected!');
+        }
+      }
+    }
     if (contains("ping", msg.content)) {
       msg.channel.send("pong");
     }
@@ -41,26 +127,26 @@ bot.on("message", msg => {
         }
       }
     }
-    if (getWord(msg.content) === "<@"+bot.user.id+">") {
+    if (getWord(msg.content) === "<@!"+bot.user.id+">") {
       var found = false;
-      for (var i = 0; i < sessions.length; i++) {
-        if (sessions[i].username === msg.author.username) {
-          talkBot(between('"', msg.content), sessions[i].cleverbotId);
+      for (var i = 0; i < cleverbots.length; i++) {
+        if (cleverbots[i].username === msg.author.username) {
+          talkBot(between('"', msg.content), cleverbots[i].cleverbot);
           found = true;
           break;
         }
       }
       if (!found) {
-        sessions.push({username: msg.author.username, cleverbotId: cleverbots.length});
-        cleverbots.push(new Cleverbot());
-        cleverbots[cleverbots.length-1].configure({botapi: "TOKEN"});
-        talkBot(between('""', msg.content), cleverbots.length-1);
+        cleverbots.push({username: msg.author.username, cleverbot:new Cleverbot()});
+        cleverbots[cleverbots.length-1].cleverbot.configure({botapi: cleverbotToken});
+        talkBot(between('""', msg.content), cleverbots[cleverbots.length-1].cleverbot);
       }
-      function talkBot(message, id) {
-        cleverbots[id].write(message, function (response) {
+      function talkBot(message, cleverbot) {
+        cleverbot.write(message, function (response) {
           msg.reply(response.output);
         });
       }
+      console.log(cleverbots);
     }
     if (getWord(msg.content) == "deleteMessages") {
       var name = getWord(msg.content, 1);
@@ -121,7 +207,20 @@ bot.on("message", msg => {
   } // end of if not bot check
 });
 
-bot.login("TOKEN");
+bot.login(discordToken);
+
+//when interupt signal is clicked
+process.on('SIGINT', function() {
+  console.log("files are being deleted");
+  fs.emptyDir(__dirname+"/tmp", function(error) {
+    if (error) {
+      console.error(error);
+    }
+    console.log("done!");
+    process.exit();
+  });
+});
+
 
 function getWord(str, count) {
   if (str.indexOf(' ') === -1) {

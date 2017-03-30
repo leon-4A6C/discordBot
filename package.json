@@ -1,6 +1,6 @@
 {
   "name": "discordbot",
-  "version": "2.0.0",
+  "version": "1.0.0",
   "description": "a discord bot",
   "main": "index.js",
   "scripts": {
@@ -8,15 +8,18 @@
   },
   "keywords": [
     "discord",
-    "bot",
-	"cleverbot"
+    "bot"
   ],
   "author": "Leon in 't Veld",
   "license": "ISC",
   "dependencies": {
     "cleverbot-node": "^0.3.6",
+    "cleverbot.io": "^1.0.4",
     "discord.js": "^11.0.0",
+    "fluent-ffmpeg": "^2.1.0",
+    "fs-extra": "^2.1.2",
     "node-opus": "^0.2.4",
-    "uws": "^0.14.0"
+    "uws": "^0.14.0",
+    "youtube-dl": "^1.11.1"
   }
 }
