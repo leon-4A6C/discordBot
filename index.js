@@ -58,7 +58,9 @@ bot.on("message", msg => {
             msg.channel.send('Connected!');
             var video = youtubedl(url, ["--format=18"], {cwd:__dirname});
             var filename = "";
-
+            if (!fs.existsSync("./tmp")){
+              fs.mkdirSync("./tmp");
+            }
             video.on("info", function(info) {
               filename = info._filename;
               filename = filename.substr(filename.length-15, filename.length);
@@ -66,7 +68,6 @@ bot.on("message", msg => {
               video.pipe(fs.createWriteStream("./tmp/"+filename+".mp4"));
               msg.channel.send("downloading!");
             });
-
             video.on("end", function() {
               console.log("done downloading!");
               ffmpeg("./tmp/"+filename+".mp4")
@@ -146,7 +147,6 @@ bot.on("message", msg => {
           msg.reply(response.output);
         });
       }
-      console.log(cleverbots);
     }
     if (getWord(msg.content) == "deleteMessages") {
       var name = getWord(msg.content, 1);
