@@ -7,8 +7,8 @@ const youtubedl = require("youtube-dl");
 const ffmpeg = require("fluent-ffmpeg");
 const helpFile = require('./help');
 
-var discordToken("DISCORD_TOKEN");
-var cleverbotToken("CLEVERBOT_TOKEN");
+var discordToken = "DISCORD_TOKEN";
+var cleverbotToken = "CLEVERBOT_TOKEN";
 
 var cleverbots = [{username: "peteadawdadawdawdawdwadrgbrrr", cleverbot: new Cleverbot()}];
 cleverbots[0].cleverbot.configure({botapi: cleverbotToken});
