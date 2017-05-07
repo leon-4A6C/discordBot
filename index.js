@@ -256,8 +256,6 @@ function between(b, message) {
   return message
 }
 
-console.log(countWords("a rabbit grabbed her by the pussy"), countDoubles("a rabbit grabbed rabbit grabbed pussy her by the pussy"));
-
 function countWords(sentence) {
   var count = 1;
   var lastFound = 0;
@@ -271,30 +269,19 @@ function countWords(sentence) {
 function countDoubles(sentence) {
   var count = 0;
   var lastFound = 0;
-  var end = false;
-  while (sentence.indexOf(" ", lastFound) != -1 || end) {
+  sentence += " "; // easy fix, it didn't count the last word before
+  while (sentence.indexOf(" ", lastFound) != -1) {
     var lastFoundInner = 0;
-    var innerEnd = false;
-    var word = sentence.substring(lastFound, (sentence.indexOf(" ", lastFound) || sentence.length));
-    while (sentence.indexOf(" ", lastFoundInner) != -1 || innerEnd) {
-      var checkWord = sentence.substring(lastFoundInner, (sentence.indexOf(" ", lastFoundInner) || sentence.length));
-      console.log(word, checkWord, count);
+    var word = sentence.substring(lastFound, sentence.indexOf(" ", lastFound));
+    while (sentence.indexOf(" ", lastFoundInner) != -1) {
+      var checkWord = sentence.substring(lastFoundInner, sentence.indexOf(" ", lastFoundInner));
       if (word == checkWord && lastFound != lastFoundInner && lastFound > lastFoundInner) {
         count++;
       }
+      console.log(word, checkWord, count);
       lastFoundInner = sentence.indexOf(" ", lastFoundInner)+1;
-      if (sentence.indexOf(" ", lastFoundInner) == -1 && !innerEnd) {
-        innerEnd = true;
-      } else {
-        innerEnd = false;
-      }
     }
     lastFound = sentence.indexOf(" ", lastFound)+1;
-    if (sentence.indexOf(" ", lastFound) == -1 && !end) {
-      end = true;
-    } else {
-      end = false;
-    }
   }
   return count;
 }
