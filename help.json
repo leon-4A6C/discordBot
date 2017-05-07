@@ -55,6 +55,11 @@
     "description": "deletes the chat bot's history from your conversation"
   },
   {
+    "title":"statistics",
+    "command":"stats",
+    "description": "gets your user status, you gain xp by typing"
+  },
+  {
     "title":"help",
     "command": "help",
     "description": "sends this helpfull data"

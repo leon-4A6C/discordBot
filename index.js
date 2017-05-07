@@ -22,10 +22,41 @@ var cleverbots = [{username: "peteadawdadawdawdawdwadrgbrrr", cleverbot: new Cle
 cleverbots[0].cleverbot.configure({botapi: cleverbotToken});
 bot.on('ready', () => {
   console.log("logged in as " + bot.user.username + "!");
+  var users = bot.users.array();
+  for (var i = 0; i < users.length; i++) {
+    (function(count) {
+      mysqlConn.query("SELECT id FROM users WHERE id = "+users[count].id, (error, results, fields) =>{
+        if (results.length == 0) {
+          mysqlConn.query("INSERT INTO users(id, username, xp) VALUES ("+users[count].id+", \""+users[count].username+"\", 0)", (error, results, fields) => {
+            console.log(error, results, fields);
+          });
+        }
+      });
+    }(i));
+  }
+});
+
+bot.on("guildMemberAdd", member => {
+  // add user to db
+  mysqlConn.query("SELECT id FROM users WHERE id = "+member.id, (error, results, fields) =>{
+    if (results.length == 0) {
+      mysqlConn.query("INSERT INTO users(id, username, xp) VALUES ("+member.id+", \""+member.username+"\", 0)", (error, results, fields) => {
+        console.log(error, results, fields);
+      });
+    }
+  });
 });
 
 bot.on("message", msg => {
   if (msg.author != bot.user) { // if this is not here it would respond to itself
+    mysqlConn.query("UPDATE users SET xp = xp+"+ (countWords(msg.content)-countDoubles(msg.content))+" WHERE id = "+msg.author.id, (error, result, fields)=>{
+      console.log(error, result, fields);
+    });
+    if (getWord(msg.content) === "stats") {
+      mysqlConn.query("SELECT xp, rights_lvl FROM users WHERE id = "+ msg.author.id, (error, results, fields)=>{
+        msg.reply("these are your stats: \nxp: " + results[0].xp + "\nrights lvl: " + results[0].rights_lvl);
+      });
+    }
     if (getWord(msg.content) === "deleteHistory") {
       var found = false;
       for (var i = 0; i < cleverbots.length; i++) {
