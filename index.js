@@ -255,3 +255,46 @@ function between(b, message) {
   message = message.substr(0, message.indexOf(b));
   return message
 }
+
+console.log(countWords("a rabbit grabbed her by the pussy"), countDoubles("a rabbit grabbed rabbit grabbed pussy her by the pussy"));
+
+function countWords(sentence) {
+  var count = 1;
+  var lastFound = 0;
+  while (sentence.indexOf(" ", lastFound) != -1) {
+    lastFound = sentence.indexOf(" ", lastFound)+1;
+    count++;
+  }
+  return count;
+}
+
+function countDoubles(sentence) {
+  var count = 0;
+  var lastFound = 0;
+  var end = false;
+  while (sentence.indexOf(" ", lastFound) != -1 || end) {
+    var lastFoundInner = 0;
+    var innerEnd = false;
+    var word = sentence.substring(lastFound, (sentence.indexOf(" ", lastFound) || sentence.length));
+    while (sentence.indexOf(" ", lastFoundInner) != -1 || innerEnd) {
+      var checkWord = sentence.substring(lastFoundInner, (sentence.indexOf(" ", lastFoundInner) || sentence.length));
+      console.log(word, checkWord, count);
+      if (word == checkWord && lastFound != lastFoundInner && lastFound > lastFoundInner) {
+        count++;
+      }
+      lastFoundInner = sentence.indexOf(" ", lastFoundInner)+1;
+      if (sentence.indexOf(" ", lastFoundInner) == -1 && !innerEnd) {
+        innerEnd = true;
+      } else {
+        innerEnd = false;
+      }
+    }
+    lastFound = sentence.indexOf(" ", lastFound)+1;
+    if (sentence.indexOf(" ", lastFound) == -1 && !end) {
+      end = true;
+    } else {
+      end = false;
+    }
+  }
+  return count;
+}
