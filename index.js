@@ -6,6 +6,14 @@ const fs = require("fs-extra");
 const youtubedl = require("youtube-dl");
 const ffmpeg = require("fluent-ffmpeg");
 const helpFile = require('./help');
+const mysql = require('mysql');
+var mysqlConn = mysql.createConnection({
+  host: "localhost",
+  user: "user",
+  password: "pass",
+  database: "DiscordBot"
+});
+mysqlConn.connect();
 
 var discordToken = "DISCORD_TOKEN";
 var cleverbotToken = "CLEVERBOT_TOKEN";
@@ -211,6 +219,7 @@ bot.login(discordToken);
 
 //when interupt signal is clicked
 process.on('SIGINT', function() {
+  mysqlConn.end();
   console.log("files are being deleted");
   fs.emptyDir(__dirname+"/tmp", function(error) {
     if (error) {

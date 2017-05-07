@@ -13,14 +13,18 @@
   "author": "Leon in 't Veld",
   "license": "ISC",
   "dependencies": {
+    "bufferutil": "^3.0.0",
     "cleverbot-node": "^0.3.6",
     "cleverbot.io": "^1.0.4",
     "discord.js": "^11.0.0",
-    "erlpack": "github:hammerandchisel/erlpack#master",
+    "erlpack": "github:hammerandchisel/erlpack",
     "fluent-ffmpeg": "^2.1.0",
     "fs-extra": "^2.1.2",
+    "libsodium-wrappers": "^0.5.1",
+    "mysql": "^2.13.0",
     "node-opus": "^0.2.4",
     "opusscript": "0.0.3",
+    "sodium": "^2.0.1",
     "uws": "^0.14.1",
     "youtube-dl": "^1.11.1"
   }
