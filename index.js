@@ -9,39 +9,71 @@ const helpFile = require('./help');
 const mysql = require('mysql');
 var mysqlConn = mysql.createConnection({
   host: "localhost",
-  user: "user",
-  password: "pass",
+  user: "test",
+  password: "test",
   database: "DiscordBot"
 });
 mysqlConn.connect();
 
-var discordToken = "DISCORD_TOKEN";
+var discordToken = "MjY5MTg3NTg1MjIwMjgwMzIw.C_zhnQ.A-APFPHEL-8RZIaejuddqxGu1mc";
 var cleverbotToken = "CLEVERBOT_TOKEN";
 
 var cleverbots = [{username: "peteadawdadawdawdawdwadrgbrrr", cleverbot: new Cleverbot()}];
 cleverbots[0].cleverbot.configure({botapi: cleverbotToken});
 bot.on('ready', () => {
   console.log("logged in as " + bot.user.username + "!");
-  var users = bot.users.array();
-  for (var i = 0; i < users.length; i++) {
-    (function(count) {
-      mysqlConn.query("SELECT id FROM users WHERE id = "+users[count].id, (error, results, fields) =>{
+  var guilds = bot.guilds.array();
+  // console.log(guilds);
+  for (var i = 0; i < guilds.length; i++) {
+    (function(guildCount) {
+      mysqlConn.query("SELECT id FROM server WHERE id = "+guilds[guildCount].id, (error, results, fields) =>{
         if (results.length == 0) {
-          mysqlConn.query("INSERT INTO users(id, username, xp) VALUES ("+users[count].id+", \""+users[count].username+"\", 0)", (error, results, fields) => {
-            console.log(error, results, fields);
+          mysqlConn.query("INSERT INTO server(id, name) VALUES ("+guilds[guildCount].id+", \""+guilds[guildCount].name+"\")", (error, results, fields) => {
+            // console.log(error, results, fields);
           });
         }
       });
+      var users = guilds[guildCount].members.array();
+      for (var i = 0; i < users.length; i++) {
+        (function(userCount) {
+          mysqlConn.query("SELECT id FROM user WHERE id = "+users[userCount].user.id, (error, results, fields) =>{
+            if (results.length == 0) {
+              mysqlConn.query("INSERT INTO user(id, username, xp, lvl) VALUES ("+users[userCount].user.id+", \""+users[userCount].user.username+"\", 0, 0)", (error, results, fields) => {
+                // console.log(error, results, fields);
+              });
+              mysqlConn.query("INSERT INTO server_has_user(server_id, user_id) VALUES ("+guilds[guildCount].id+", "+users[userCount].user.id+")", (error, results, fields) => {
+                // console.log(error, results, fields);
+              });
+            }
+          });
+        }(i));
+      }
+      var roles = guilds[guildCount].roles.array();
+      console.log(roles);
+      for (var i = 0; i < roles.length; i++) {
+        (function(rolesCount) {
+          mysqlConn.query("SELECT id FROM roles WHERE id = "+roles[rolesCount].id, (error, results, fields) =>{
+            if (results.length == 0) {
+              mysqlConn.query("INSERT INTO roles(id, name) VALUES ("+roles[rolesCount].id+", \""+roles[rolesCount].name+"\")", (error, results, fields) => {
+                // console.log(error, results, fields);
+              });
+              mysqlConn.query("INSERT INTO server_has_roles(server_id, roles_id) VALUES ("+guilds[guildCount].id+", "+roles[rolesCount].id+")", (error, results, fields) => {
+                // console.log(error, results, fields);
+              });
+            }
+          });
+        }(i));
+      }
     }(i));
   }
 });
 
 bot.on("guildMemberAdd", member => {
   // add user to db
-  mysqlConn.query("SELECT id FROM users WHERE id = "+member.id, (error, results, fields) =>{
+  mysqlConn.query("SELECT id FROM user WHERE id = "+member.id, (error, results, fields) =>{
     if (results.length == 0) {
-      mysqlConn.query("INSERT INTO users(id, username, xp) VALUES ("+member.id+", \""+member.username+"\", 0)", (error, results, fields) => {
-        console.log(error, results, fields);
+      mysqlConn.query("INSERT INTO user(id, username, xp, lvl) VALUES ("+member.id+", \""+member.username+"\", 0, 0)", (error, results, fields) => {
+        // console.log(error, results, fields);
       });
     }
   });
@@ -49,11 +81,11 @@ bot.on("guildMemberAdd", member => {
 
 bot.on("message", msg => {
   if (msg.author != bot.user) { // if this is not here it would respond to itself
-    mysqlConn.query("UPDATE users SET xp = xp+"+ (countWords(msg.content)-countDoubles(msg.content))+" WHERE id = "+msg.author.id, (error, result, fields)=>{
-      console.log(error, result, fields);
+    mysqlConn.query("UPDATE user SET xp = xp+"+ (countWords(msg.content)-countDoubles(msg.content))+" WHERE id = "+msg.author.id, (error, result, fields)=>{
+      // console.log(error, result, fields);
     });
     if (getWord(msg.content) === "stats") {
-      mysqlConn.query("SELECT xp, rights_lvl FROM users WHERE id = "+ msg.author.id, (error, results, fields)=>{
+      mysqlConn.query("SELECT xp, lvl FROM user WHERE id = "+ msg.author.id, (error, results, fields)=>{
         msg.reply("these are your stats: \nxp: " + results[0].xp + "\nrights lvl: " + results[0].rights_lvl);
       });
     }
