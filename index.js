@@ -22,61 +22,16 @@ var cleverbots = [{username: "peteadawdadawdawdawdwadrgbrrr", cleverbot: new Cle
 cleverbots[0].cleverbot.configure({botapi: cleverbotToken});
 bot.on('ready', () => {
   console.log("logged in as " + bot.user.username + "!");
-  var guilds = bot.guilds.array();
-  // console.log(guilds);
-  for (var i = 0; i < guilds.length; i++) {
-    (function(guildCount) {
-      mysqlConn.query("SELECT id FROM server WHERE id = "+guilds[guildCount].id, (error, results, fields) =>{
-        if (results.length == 0) {
-          mysqlConn.query("INSERT INTO server(id, name) VALUES ("+guilds[guildCount].id+", \""+guilds[guildCount].name+"\")", (error, results, fields) => {
-            // console.log(error, results, fields);
-          });
-        }
-      });
-      var users = guilds[guildCount].members.array();
-      for (var i = 0; i < users.length; i++) {
-        (function(userCount) {
-          mysqlConn.query("SELECT id FROM user WHERE id = "+users[userCount].user.id, (error, results, fields) =>{
-            if (results.length == 0) {
-              mysqlConn.query("INSERT INTO user(id, username, xp, lvl) VALUES ("+users[userCount].user.id+", \""+users[userCount].user.username+"\", 0, 0)", (error, results, fields) => {
-                // console.log(error, results, fields);
-              });
-              mysqlConn.query("INSERT INTO server_has_user(server_id, user_id) VALUES ("+guilds[guildCount].id+", "+users[userCount].user.id+")", (error, results, fields) => {
-                // console.log(error, results, fields);
-              });
-            }
-          });
-        }(i));
-      }
-      var roles = guilds[guildCount].roles.array();
-      console.log(roles);
-      for (var i = 0; i < roles.length; i++) {
-        (function(rolesCount) {
-          mysqlConn.query("SELECT id FROM roles WHERE id = "+roles[rolesCount].id, (error, results, fields) =>{
-            if (results.length == 0) {
-              mysqlConn.query("INSERT INTO roles(id, name) VALUES ("+roles[rolesCount].id+", \""+roles[rolesCount].name+"\")", (error, results, fields) => {
-                // console.log(error, results, fields);
-              });
-              mysqlConn.query("INSERT INTO server_has_roles(server_id, roles_id) VALUES ("+guilds[guildCount].id+", "+roles[rolesCount].id+")", (error, results, fields) => {
-                // console.log(error, results, fields);
-              });
-            }
-          });
-        }(i));
-      }
-    }(i));
-  }
+  updateDB();
 });
 
 bot.on("guildMemberAdd", member => {
   // add user to db
-  mysqlConn.query("SELECT id FROM user WHERE id = "+member.id, (error, results, fields) =>{
-    if (results.length == 0) {
-      mysqlConn.query("INSERT INTO user(id, username, xp, lvl) VALUES ("+member.id+", \""+member.username+"\", 0, 0)", (error, results, fields) => {
-        // console.log(error, results, fields);
-      });
-    }
-  });
+  updateDB();
+});
+
+bot.on("guildCreate", guild => {
+  updateDB();
 });
 
 bot.on("message", msg => {
@@ -86,7 +41,7 @@ bot.on("message", msg => {
     });
     if (getWord(msg.content) === "stats") {
       mysqlConn.query("SELECT xp, lvl FROM user WHERE id = "+ msg.author.id, (error, results, fields)=>{
-        msg.reply("these are your stats: \nxp: " + results[0].xp + "\nrights lvl: " + results[0].rights_lvl);
+        msg.reply("these are your stats: \nxp: " + results[0].xp + "\nlvl: " + results[0].lvl);
       });
     }
     if (getWord(msg.content) === "deleteHistory") {
@@ -280,10 +235,57 @@ bot.on("message", msg => {
 
 bot.login(discordToken);
 
+function updateDB() {
+  var guilds = bot.guilds.array();
+  // console.log(guilds);
+  for (var i = 0; i < guilds.length; i++) {
+    (function(guildCount) {
+      mysqlConn.query("SELECT id FROM server WHERE id = "+guilds[guildCount].id, (error, results, fields) =>{
+        if (results.length == 0) {
+          mysqlConn.query("INSERT INTO server(id, name) VALUES ("+guilds[guildCount].id+", \""+guilds[guildCount].name+"\")", (error, results, fields) => {
+            // console.log(error, results, fields);
+          });
+        }
+      });
+      var users = guilds[guildCount].members.array();
+      for (var i = 0; i < users.length; i++) {
+        (function(userCount) {
+          mysqlConn.query("SELECT id FROM user WHERE id = "+users[userCount].user.id, (error, results, fields) =>{
+            if (results.length == 0) {
+              mysqlConn.query("INSERT INTO user(id, username, xp, lvl) VALUES ("+users[userCount].user.id+", \""+users[userCount].user.username+"\", 0, 0)", (error, results, fields) => {
+                // console.log(error, results, fields);
+              });
+              mysqlConn.query("INSERT INTO server_has_user(server_id, user_id) VALUES ("+guilds[guildCount].id+", "+users[userCount].user.id+")", (error, results, fields) => {
+                // console.log(error, results, fields);
+              });
+            }
+          });
+        }(i));
+      }
+      var roles = guilds[guildCount].roles.array();
+      // console.log(roles);
+      for (var i = 0; i < roles.length; i++) {
+        (function(rolesCount) {
+          mysqlConn.query("SELECT id FROM roles WHERE id = "+roles[rolesCount].id, (error, results, fields) =>{
+            if (results.length == 0) {
+              mysqlConn.query("INSERT INTO roles(id, name) VALUES ("+roles[rolesCount].id+", \""+roles[rolesCount].name+"\")", (error, results, fields) => {
+                // console.log(error, results, fields);
+              });
+              mysqlConn.query("INSERT INTO server_has_roles(server_id, roles_id) VALUES ("+guilds[guildCount].id+", "+roles[rolesCount].id+")", (error, results, fields) => {
+                // console.log(error, results, fields);
+              });
+            }
+          });
+        }(i));
+      }
+    }(i));
+  }
+}
+
 //when interupt signal is clicked
 process.on('SIGINT', function() {
   mysqlConn.end();
-  console.log("files are being deleted");
+  console.log("\nfiles are being deleted");
   fs.emptyDir(__dirname+"/tmp", function(error) {
     if (error) {
       console.error(error);
@@ -350,7 +352,7 @@ function countDoubles(sentence) {
       if (word == checkWord && lastFound != lastFoundInner && lastFound > lastFoundInner) {
         count++;
       }
-      console.log(word, checkWord, count);
+      // console.log(word, checkWord, count);
       lastFoundInner = sentence.indexOf(" ", lastFoundInner)+1;
     }
     lastFound = sentence.indexOf(" ", lastFound)+1;
