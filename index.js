@@ -37,6 +37,7 @@ bot.on("guildCreate", guild => {
 var lvlMultiplier = 2;
 bot.on("message", msg => {
   if (msg.author != bot.user) { // if this is not here it would respond to itself
+    // update xp and lvl of the user who talked
     mysqlConn.query("SELECT * FROM user WHERE id = "+ msg.author.id, (error, result, fields) => {
       var newXp = result[0].xp + (countWords(msg.content)-countDoubles(msg.content));
       var nextLvlThreshold = Math.pow((result[0].lvl * lvlMultiplier), 2) * lvlMultiplier + 100;
@@ -44,12 +45,37 @@ bot.on("message", msg => {
       if (newXp >= nextLvlThreshold) {
         newLvl++;
         newXp -= nextLvlThreshold;
+        updateRoles(msg.guild);
         msg.reply("you reached lvl **"+newLvl+"** congrats");
       }
       mysqlConn.query("UPDATE user SET xp = "+ newXp +", lvl = "+ newLvl +" WHERE id = "+msg.author.id, (error, result, fields)=>{
         // console.log(error, result, fields);
       });
     });
+    if (getWord(msg.content) === "set") {
+      if (getWord(msg.content, 1) === "min_lvl") {
+        var role = getWord(msg.content, 2);
+        var lvl = getWord(msg.content, 3);
+        var roles = msg.guild.roles.array();
+        for (var i = 0; i < roles.length; i++) {
+          if (roles[i].name === role) {
+            mysqlConn.query("UPDATE roles SET lvl = "+ lvl +" WHERE id = "+roles[i].id, (error, result, fields) => {
+              if (error) {
+                msg.reply("something went wrong, you probably didn't write the lvl correctly, try again.");
+              } else {
+                updateRoles(msg.guild);
+              }
+            });
+            var found = true;
+          }
+        }
+        if (!found) {
+          msg.reply("invalid name given");
+        }
+      } else if (getWord(msg.content, 1) === "lvlMultiplier") {
+        // TODO: add a feature where you can set the lvl multiplier on a guild(server)
+      }
+    }
     if (getWord(msg.content) === "stats") {
       mysqlConn.query("SELECT xp, lvl FROM user WHERE id = "+ msg.author.id, (error, result, fields)=>{
         var nextLvlThreshold = Math.pow((result[0].lvl * lvlMultiplier), 2) * lvlMultiplier + 100;
@@ -283,7 +309,7 @@ function updateDB() {
       for (var i = 0; i < roles.length; i++) {
         (function(rolesCount) {
           mysqlConn.query("SELECT id FROM roles WHERE id = "+roles[rolesCount].id, (error, results, fields) =>{
-            if (results.length == 0) {
+            if (results.length == 0 && roles[rolesCount].id != guilds[guildCount].defaultRole.id) {
               mysqlConn.query("INSERT INTO roles(id, name) VALUES ("+roles[rolesCount].id+", \""+roles[rolesCount].name+"\")", (error, results, fields) => {
                 // console.log(error, results, fields);
                 mysqlConn.query("INSERT INTO server_has_roles(server_id, roles_id) VALUES ("+guilds[guildCount].id+", "+roles[rolesCount].id+")", (error, results, fields) => {
@@ -296,6 +322,43 @@ function updateDB() {
       }
     }(i));
   }
+}
+
+function updateRoles(guild) {
+  updateDB();
+  var guildId = guild.id;
+  var members = guild.members.array();
+  var roles = guild.roles.array();
+  mysqlConn.query("SELECT * FROM server_has_roles INNER JOIN roles ON roles.id = roles_id WHERE server_id = " + guildId, (error, results, fields) => {
+    if (error) {
+      console.log(error);
+    }else {
+      for (var i = 0; i < results.length; i++) {
+        (function(roleResult) {
+          mysqlConn.query("SELECT * FROM user", (error, results, fields) => {
+            if (error) {
+              console.log(error);
+            } else {
+              for (var i = 0; i < results.length; i++) {
+                if (results[i].lvl >= roleResult.lvl) {
+                  for (var j = 0; j < members.length; j++) {
+                    if (members[j].id == results[i].id) {
+                      for (var k = 0; k < roles.length; k++) {
+                        if (roles[k].id == roleResult.id) {
+                          console.log(roles[k], roleResult);
+                          members[j].addRole(roles[k]);
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          });
+        }(results[i]));
+      }
+    }
+  });
 }
 
 //when interupt signal is clicked
