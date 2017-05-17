@@ -256,8 +256,8 @@ function updateDB() {
                 // console.log(error, results, fields);
               });
             }
-            mysqlConn.query("SELECT user_id, server_id FROM user WHERE user_id = "+users[userCount].user.id + " AND server_id = "+guilds[guildCount].id, (error, results, fields) =>{
-              if (results.legnth == 0) {
+            mysqlConn.query("SELECT user_id, server_id FROM server_has_user WHERE user_id = "+users[userCount].user.id + " AND server_id = "+guilds[guildCount].id, (error, results, fields) =>{
+              if (results.length == 0) {
                 mysqlConn.query("INSERT INTO server_has_user(server_id, user_id) VALUES ("+guilds[guildCount].id+", "+users[userCount].user.id+")", (error, results, fields) => {
                   // console.log(error, results, fields);
                 });
