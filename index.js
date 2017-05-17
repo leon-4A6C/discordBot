@@ -34,14 +34,26 @@ bot.on("guildCreate", guild => {
   updateDB();
 });
 
+var lvlMultiplier = 2;
 bot.on("message", msg => {
   if (msg.author != bot.user) { // if this is not here it would respond to itself
-    mysqlConn.query("UPDATE user SET xp = xp+"+ (countWords(msg.content)-countDoubles(msg.content))+" WHERE id = "+msg.author.id, (error, result, fields)=>{
-      // console.log(error, result, fields);
+    mysqlConn.query("SELECT * FROM user WHERE id = "+ msg.author.id, (error, result, fields) => {
+      var newXp = result[0].xp + (countWords(msg.content)-countDoubles(msg.content));
+      var nextLvlThreshold = Math.pow((result[0].lvl * lvlMultiplier), 2) * lvlMultiplier + 100;
+      var newLvl = result[0].lvl;
+      if (newXp >= nextLvlThreshold) {
+        newLvl++;
+        newXp -= nextLvlThreshold;
+        msg.reply("you reached lvl **"+newLvl+"** congrats");
+      }
+      mysqlConn.query("UPDATE user SET xp = "+ newXp +", lvl = "+ newLvl +" WHERE id = "+msg.author.id, (error, result, fields)=>{
+        // console.log(error, result, fields);
+      });
     });
     if (getWord(msg.content) === "stats") {
-      mysqlConn.query("SELECT xp, lvl FROM user WHERE id = "+ msg.author.id, (error, results, fields)=>{
-        msg.reply("these are your stats: \nxp: " + results[0].xp + "\nlvl: " + results[0].lvl);
+      mysqlConn.query("SELECT xp, lvl FROM user WHERE id = "+ msg.author.id, (error, result, fields)=>{
+        var nextLvlThreshold = Math.pow((result[0].lvl * lvlMultiplier), 2) * lvlMultiplier + 100;
+        msg.reply("these are your stats: \nxp: " + result[0].xp + "\nlvl: " + result[0].lvl + "\nxp needed for next lvl: " + nextLvlThreshold);
       });
     }
     if (getWord(msg.content) === "deleteHistory") {
@@ -335,6 +347,7 @@ function between(b, message) {
 }
 
 function countWords(sentence) {
+  sentence = sentence.trim().replace(/\s{2,}/g, ' '); //removes unnecessary spaces, because it messed up the program
   var count = 1;
   var lastFound = 0;
   while (sentence.indexOf(" ", lastFound) != -1) {
@@ -343,8 +356,8 @@ function countWords(sentence) {
   }
   return count;
 }
-
 function countDoubles(sentence) {
+  sentence = sentence.trim().replace(/\s{2,}/g, ' '); //removes unnecessary spaces, because it messed up the program
   var count = 0;
   var lastFound = 0;
   sentence += " "; // easy fix, it didn't count the last word before
