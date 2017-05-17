@@ -262,7 +262,7 @@ function updateDB() {
                   // console.log(error, results, fields);
                 });
               }
-            }
+            });
           });
         }(i));
       }
