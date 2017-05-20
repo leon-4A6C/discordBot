@@ -15,7 +15,7 @@ var mysqlConn = mysql.createConnection({
 });
 mysqlConn.connect();
 
-var discordToken = "MjY5MTg3NTg1MjIwMjgwMzIw.C_zhnQ.A-APFPHEL-8RZIaejuddqxGu1mc";
+var discordToken = "DISCORD_TOKEN";
 var cleverbotToken = "CLEVERBOT_TOKEN";
 
 var cleverbots = [{username: "peteadawdadawdawdawdwadrgbrrr", cleverbot: new Cleverbot()}];
@@ -34,52 +34,79 @@ bot.on("guildCreate", guild => {
   updateDB();
 });
 
-var lvlMultiplier = 2;
+bot.on("roleCreate", role => {
+  updateDB();
+  updateRoles(role.guild);
+});
+
 bot.on("message", msg => {
   if (msg.author != bot.user) { // if this is not here it would respond to itself
     // update xp and lvl of the user who talked
     mysqlConn.query("SELECT * FROM user WHERE id = "+ msg.author.id, (error, result, fields) => {
-      var newXp = result[0].xp + (countWords(msg.content)-countDoubles(msg.content));
-      var nextLvlThreshold = Math.pow((result[0].lvl * lvlMultiplier), 2) * lvlMultiplier + 100;
-      var newLvl = result[0].lvl;
-      if (newXp >= nextLvlThreshold) {
-        newLvl++;
-        newXp -= nextLvlThreshold;
-        updateRoles(msg.guild);
-        msg.reply("you reached lvl **"+newLvl+"** congrats");
-      }
-      mysqlConn.query("UPDATE user SET xp = "+ newXp +", lvl = "+ newLvl +" WHERE id = "+msg.author.id, (error, result, fields)=>{
-        // console.log(error, result, fields);
+      mysqlConn.query("SELECT lvl_multiplier FROM server WHERE id = \""+msg.guild.id+"\"", (error, resultGuild, fields) => {
+        var lvlMultiplier = resultGuild[0].lvl_multiplier;
+        var newXp = result[0].xp + (countWords(msg.content)-countDoubles(msg.content));
+        var nextLvlThreshold = Math.floor((Math.pow((result[0].lvl * (lvlMultiplier * 2)), 2)  + 100) * (lvlMultiplier * 2));
+        var newLvl = result[0].lvl;
+        if (newXp >= nextLvlThreshold) {
+          newLvl++;
+          newXp -= nextLvlThreshold;
+          updateRoles(msg.guild);
+          msg.reply("you reached lvl **"+newLvl+"** congrats");
+        }
+        mysqlConn.query("UPDATE user SET xp = "+ newXp +", lvl = "+ newLvl +" WHERE id = "+msg.author.id, (error, result, fields)=>{
+          // console.log(error, result, fields);
+        });
       });
     });
+    if (msg.content === "invite") {
+      bot.generateInvite()
+        .then(link => {
+          msg.channel.send("invite link: "+link);
+        });
+    }
     if (getWord(msg.content) === "set") {
-      if (getWord(msg.content, 1) === "min_lvl") {
-        var role = getWord(msg.content, 2);
-        var lvl = getWord(msg.content, 3);
-        var roles = msg.guild.roles.array();
-        for (var i = 0; i < roles.length; i++) {
-          if (roles[i].name === role) {
-            mysqlConn.query("UPDATE roles SET lvl = "+ lvl +" WHERE id = "+roles[i].id, (error, result, fields) => {
-              if (error) {
-                msg.reply("something went wrong, you probably didn't write the lvl correctly, try again.");
-              } else {
-                updateRoles(msg.guild);
-              }
-            });
-            var found = true;
+      if (msg.member.hasPermission("ADMINISTRATOR")) {
+        if (getWord(msg.content, 1) === "min_lvl") {
+          var role = getWord(msg.content, 2);
+          var lvl = getWord(msg.content, 3);
+          var roles = msg.guild.roles.array();
+          for (var i = 0; i < roles.length; i++) {
+            if (roles[i].name === role) {
+              mysqlConn.query("UPDATE role SET lvl = "+ lvl +" WHERE id = "+roles[i].id, (error, result, fields) => {
+                if (error) {
+                  msg.reply("something went wrong, you probably didn't write the lvl correctly, try again.");
+                } else {
+                  updateRoles(msg.guild);
+                  msg.reply("min_lvl of "+role+" is set to "+lvl);
+                }
+              });
+              var found = true;
+            }
           }
+          if (!found) {
+            msg.reply("invalid name given");
+          }
+        } else if (getWord(msg.content, 1) === "lvl_multiplier") {
+          newMultiplier = getWord(msg.content, 2);
+          mysqlConn.query("UPDATE server SET lvl_multiplier = "+newMultiplier+" WHERE id = \""+msg.guild.id+"\"", (error, result, fields) => {
+            if (error) {
+              console.log(error);
+            }
+            msg.reply("lvl_multiplier is set to "+newMultiplier);
+          });
         }
-        if (!found) {
-          msg.reply("invalid name given");
-        }
-      } else if (getWord(msg.content, 1) === "lvlMultiplier") {
-        // TODO: add a feature where you can set the lvl multiplier on a guild(server)
+      } else {
+        msg.reply("you don't have permissions to do that");
       }
     }
     if (getWord(msg.content) === "stats") {
       mysqlConn.query("SELECT xp, lvl FROM user WHERE id = "+ msg.author.id, (error, result, fields)=>{
-        var nextLvlThreshold = Math.pow((result[0].lvl * lvlMultiplier), 2) * lvlMultiplier + 100;
-        msg.reply("these are your stats: \nxp: " + result[0].xp + "\nlvl: " + result[0].lvl + "\nxp needed for next lvl: " + nextLvlThreshold);
+        mysqlConn.query("SELECT lvl_multiplier FROM server WHERE id = \""+msg.guild.id+"\"", (error, resultGuild, fields) => {
+          var lvlMultiplier = resultGuild[0].lvl_multiplier;
+          var nextLvlThreshold = Math.floor((Math.pow((result[0].lvl * (lvlMultiplier * 2)), 2)  + 100) * (lvlMultiplier * 2));
+          msg.reply("these are your stats: \nxp: " + result[0].xp + "\nlvl: " + result[0].lvl + "\nxp needed for next lvl: " + nextLvlThreshold);
+        });
       });
     }
     if (getWord(msg.content) === "deleteHistory") {
@@ -278,9 +305,9 @@ function updateDB() {
   // console.log(guilds);
   for (var i = 0; i < guilds.length; i++) {
     (function(guildCount) {
-      mysqlConn.query("SELECT id FROM server WHERE id = "+guilds[guildCount].id, (error, results, fields) =>{
+      mysqlConn.query("SELECT id FROM server WHERE id = \""+guilds[guildCount].id+"\"", (error, results, fields) =>{
         if (results.length == 0) {
-          mysqlConn.query("INSERT INTO server(id, name) VALUES ("+guilds[guildCount].id+", \""+guilds[guildCount].name+"\")", (error, results, fields) => {
+          mysqlConn.query("INSERT INTO server(id, name) VALUES (\""+guilds[guildCount].id+"\", \""+guilds[guildCount].name+"\")", (error, results, fields) => {
             // console.log(error, results, fields);
           });
         }
@@ -288,15 +315,18 @@ function updateDB() {
       var users = guilds[guildCount].members.array();
       for (var i = 0; i < users.length; i++) {
         (function(userCount) {
-          mysqlConn.query("SELECT id FROM user WHERE id = "+users[userCount].user.id, (error, results, fields) =>{
+          mysqlConn.query("SELECT id FROM user WHERE id = \""+users[userCount].user.id+"\"", (error, results, fields) =>{
             if (results.length == 0) {
-              mysqlConn.query("INSERT INTO user(id, username, xp, lvl) VALUES ("+users[userCount].user.id+", \""+users[userCount].user.username+"\", 0, 0)", (error, results, fields) => {
+              mysqlConn.query("INSERT INTO user(id, username) VALUES (\""+users[userCount].user.id+"\", \""+users[userCount].user.username+"\")", (error, results, fields) => {
                 // console.log(error, results, fields);
               });
             }
-            mysqlConn.query("SELECT user_id, server_id FROM server_has_user WHERE user_id = "+users[userCount].user.id + " AND server_id = "+guilds[guildCount].id, (error, results, fields) =>{
+            mysqlConn.query("SELECT user_id, server_id FROM server_has_user WHERE user_id = \""+users[userCount].user.id + "\" AND server_id = \""+guilds[guildCount].id+"\"", (error, results, fields) =>{
+              if (error) {
+                console.log(error);
+              }
               if (results.length == 0) {
-                mysqlConn.query("INSERT INTO server_has_user(server_id, user_id) VALUES ("+guilds[guildCount].id+", "+users[userCount].user.id+")", (error, results, fields) => {
+                mysqlConn.query("INSERT INTO server_has_user(server_id, user_id) VALUES (\""+guilds[guildCount].id+"\", \""+users[userCount].user.id+"\")", (error, results, fields) => {
                   // console.log(error, results, fields);
                 });
               }
@@ -308,11 +338,14 @@ function updateDB() {
       // console.log(roles);
       for (var i = 0; i < roles.length; i++) {
         (function(rolesCount) {
-          mysqlConn.query("SELECT id FROM roles WHERE id = "+roles[rolesCount].id, (error, results, fields) =>{
+          mysqlConn.query("SELECT id FROM role WHERE id = \""+roles[rolesCount].id+"\"", (error, results, fields) =>{
+            if (error) {
+              console.log(error);
+            }
             if (results.length == 0 && roles[rolesCount].id != guilds[guildCount].defaultRole.id) {
-              mysqlConn.query("INSERT INTO roles(id, name) VALUES ("+roles[rolesCount].id+", \""+roles[rolesCount].name+"\")", (error, results, fields) => {
+              mysqlConn.query("INSERT INTO role(id, name) VALUES (\""+roles[rolesCount].id+"\", \""+roles[rolesCount].name+"\")", (error, results, fields) => {
                 // console.log(error, results, fields);
-                mysqlConn.query("INSERT INTO server_has_roles(server_id, roles_id) VALUES ("+guilds[guildCount].id+", "+roles[rolesCount].id+")", (error, results, fields) => {
+                mysqlConn.query("INSERT INTO server_has_role(server_id, role_id) VALUES (\""+guilds[guildCount].id+"\", \""+roles[rolesCount].id+"\")", (error, results, fields) => {
                   // console.log(error, results, fields);
                 });
               });
@@ -327,30 +360,22 @@ function updateDB() {
 function updateRoles(guild) {
   updateDB();
   var guildId = guild.id;
-  var members = guild.members.array();
-  var roles = guild.roles.array();
-  mysqlConn.query("SELECT * FROM server_has_roles INNER JOIN roles ON roles.id = roles_id WHERE server_id = " + guildId, (error, results, fields) => {
+  var members = guild.members;
+  var roles = guild.roles;
+  mysqlConn.query("SELECT * FROM server_has_role INNER JOIN role ON role.id = role_id WHERE server_id = \"" + guildId+"\"", (error, results, fields) => {
     if (error) {
       console.log(error);
     }else {
       for (var i = 0; i < results.length; i++) {
         (function(roleResult) {
-          mysqlConn.query("SELECT * FROM user", (error, results, fields) => {
+          mysqlConn.query("SELECT * FROM server_has_user INNER JOIN user ON user.id = user_id WHERE server_id = \"" + guildId + "\" AND user.lvl >= " + roleResult.lvl, (error, results, fields) => {
             if (error) {
               console.log(error);
             } else {
               for (var i = 0; i < results.length; i++) {
-                if (results[i].lvl >= roleResult.lvl) {
-                  for (var j = 0; j < members.length; j++) {
-                    if (members[j].id == results[i].id) {
-                      for (var k = 0; k < roles.length; k++) {
-                        if (roles[k].id == roleResult.id) {
-                          console.log(roles[k], roleResult);
-                          members[j].addRole(roles[k]);
-                        }
-                      }
-                    }
-                  }
+                var member = members.find("id", results[i].id);
+                if (member) {
+                  member.addRole(roles.find("id", roleResult.id)).catch(console.error);
                 }
               }
             }

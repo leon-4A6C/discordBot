@@ -60,6 +60,21 @@
     "description": "gets your user status, you gain xp by typing"
   },
   {
+    "title":"set minimum lvl of a role",
+    "command":"set min_lvl role_name the_min_lvl",
+    "description": "sets the min_lvl of a role, you need to be **admin** for this"
+  },
+  {
+    "title":"set lvl multiplier of the server/guild",
+    "command":"set lvl_multiplier the_lvl_multiplier",
+    "description": "sets the lvl multiplier of the server lower easier higher harder default = 1, you need to be **admin** for this"
+  },
+  {
+    "title":"add bot to server/guild",
+    "command":"invite",
+    "description": "gives invite link to invite bot to servers/guilds"
+  },
+  {
     "title":"help",
     "command": "help",
     "description": "sends this helpfull data"
