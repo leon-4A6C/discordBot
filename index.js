@@ -9,10 +9,10 @@ const helpFile = require('./help');
 const tokens = require('./tokens');
 const mysql = require('mysql');
 var mysqlConn = mysql.createConnection({
-  host: "localhost",
-  user: "discord",
-  password: "discord",
-  database: "DiscordBot"
+  host: tokens.DBhost || "localhost",
+  user: tokens.DBusername || "discord",
+  password: tokens.DBpassword || "discord",
+  database: tokens.DBname || "DiscordBot"
 });
 mysqlConn.connect();
 
