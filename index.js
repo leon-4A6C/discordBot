@@ -1,7 +1,7 @@
 const Discord = require("discord.js");
 const bot = new Discord.Client();
 const http = require('http');
-const Cleverbot = require("cleverbot-node");
+const Cleverbot = require("./cleverbot.js");
 const fs = require("fs-extra");
 const youtubedl = require("youtube-dl");
 const ffmpeg = require("fluent-ffmpeg");
@@ -18,8 +18,6 @@ mysqlConn.connect();
 var discordToken = "DISCORD_TOKEN";
 var cleverbotToken = "CLEVERBOT_TOKEN";
 
-var cleverbots = [{username: "peteadawdadawdawdawdwadrgbrrr", cleverbot: new Cleverbot()}];
-cleverbots[0].cleverbot.configure({botapi: cleverbotToken});
 bot.on('ready', () => {
   console.log("logged in as " + bot.user.username + "!");
   updateDB();
@@ -129,17 +127,13 @@ bot.on("message", msg => {
       });
     }
     if (getWord(msg.content) === "deleteHistory") {
-      var found = false;
-      for (var i = 0; i < cleverbots.length; i++) {
-        if (cleverbots[i].username === msg.author.username) {
-          found = true;
-          cleverbots.splice(i, 1);
-          break;
+      mysqlConn.query("UPDATE user SET botHistory = null WHERE id = \""+msg.author.id+"\"", (error, results, fields) => {
+        if (error) {
+          console.log(error);
+        } else {
+          msg.reply("chatbot history has been deleted!");
         }
-      }
-      if (!found) {
-        msg.reply("you have got no chat history");
-      }
+      });
     }
     if (getWord(msg.content)==="play") {
       var url = getWord(msg.content, 1);
@@ -240,24 +234,29 @@ bot.on("message", msg => {
     }
     if (msg.mentions.users.array()[0]) {
       if (msg.mentions.users.array()[0].id === bot.user.id) {
-        var found = false;
-        for (var i = 0; i < cleverbots.length; i++) {
-          if (cleverbots[i].username === msg.author.username) {
-            talkBot(between('"', msg.content), cleverbots[i].cleverbot);
-            found = true;
-            break;
+        mysqlConn.query("SELECT botHistory FROM user WHERE id = \""+msg.author.id+"\"", (error, results, fields) => {
+          var cs = '';
+          if (results[0].botHistory != null || results[0].botHistory != "null") {
+            cs = results[0].botHistory;
           }
-        }
-        if (!found) {
-          cleverbots.push({username: msg.author.username, cleverbot:new Cleverbot()});
-          cleverbots[cleverbots.length-1].cleverbot.configure({botapi: cleverbotToken});
-          talkBot(between('""', msg.content), cleverbots[cleverbots.length-1].cleverbot);
-        }
-        function talkBot(message, cleverbot) {
-          cleverbot.write(message, function (response) {
-            msg.reply(response.output);
+          // creates new cleverbot and gives it the api key and history if the user has it
+          var cleverbot = new Cleverbot({key: cleverbotToken, cs: cs});
+          cleverbot.say(between('"', msg.content), (output, error) => {
+            if (error) {
+              console.log(error);
+            }else {
+              msg.reply(output);
+              // updates history on DB
+              mysqlConn.query("UPDATE user SET botHistory = \""+cleverbot.options.cs+"\" WHERE id = \""+msg.author.id+"\"", (error, results, fields) => {
+                if (error) {
+                  console.log(error);
+                } else {
+                  cleverbot = null;
+                }
+              });
+            }
           });
-        }
+        });
       }
     }
     if (getWord(msg.content) == "deleteMessages") {
