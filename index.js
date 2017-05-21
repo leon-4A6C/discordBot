@@ -238,7 +238,7 @@ bot.on("message", msg => {
         }
       }
     }
-    if (msg.mentions.users.array()[0].id === bot.id) {
+    if (msg.mentions.users.array()[0].id === bot.user.id) {
       var found = false;
       for (var i = 0; i < cleverbots.length; i++) {
         if (cleverbots[i].username === msg.author.username) {
