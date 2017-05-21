@@ -9,8 +9,8 @@ const helpFile = require('./help');
 const mysql = require('mysql');
 var mysqlConn = mysql.createConnection({
   host: "localhost",
-  user: "test",
-  password: "test",
+  user: "discord",
+  password: "discord",
   database: "DiscordBot"
 });
 mysqlConn.connect();
@@ -418,11 +418,11 @@ function deleteGuild(guild) {
       console.log(error);
     } else {
       for (var i = 0; i < roles.length; i++) {
-        mysqlConn.query("DELETE FROM role WHERE id = \""+roles[i].id+"\"", (error, results, fields) => {
+        mysqlConn.query("DELETE FROM server_has_role WHERE server_id = \""+guildId+"\"", (error, results, fields) => {
           if (error) {
             console.log(error);
           } else {
-            mysqlConn.query("DELETE FROM server_has_role WHERE server_id = \""+guildId+"\"", (error, results, fields) => {
+            mysqlConn.query("DELETE FROM role WHERE id = \""+roles[i].id+"\"", (error, results, fields) => {
               if (error) {
                 console.log(error);
               }
@@ -445,11 +445,11 @@ function updateGuild(guild) {
 
 function deleteRole(role) {
   updateDB();
-  mysqlConn.query("DELETE FROM role WHERE id = \""+role.id+"\"", (error, results, fields) => {
+  mysqlConn.query("DELETE FROM server_has_role WHERE role_id = \""+role.id+"\"", (error, results, fields) => {
     if (error) {
       console.log(error);
     } else {
-      mysqlConn.query("DELETE FROM server_has_role WHERE role_id = \""+role.id+"\"", (error, results, fields) => {
+      mysqlConn.query("DELETE FROM role WHERE id = \""+role.id+"\"", (error, results, fields) => {
         if (error) {
           console.log(error);
         }
