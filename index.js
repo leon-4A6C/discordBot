@@ -50,7 +50,7 @@ bot.on("roleCreate", role => {
 });
 
 bot.on("roleDelete", role => {
-  roleDelete(role);
+  deleteRole(role);
 });
 
 bot.on("roleUpdate", role => {
