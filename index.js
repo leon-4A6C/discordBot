@@ -25,20 +25,39 @@ bot.on('ready', () => {
   updateDB();
 });
 
+// guild events
+bot.on("guildCreate", guild => {
+  updateDB();
+});
+
+bot.on("guildDelete", guild => {
+  guildDelete(guild);
+});
+
+bot.on("guildUpdate", guild => {
+  updateGuild(guild);
+});
+
+// guild member events
 bot.on("guildMemberAdd", member => {
   // add user to db
   updateDB();
 });
 
-bot.on("guildCreate", guild => {
-  updateDB();
-});
-
+// role events
 bot.on("roleCreate", role => {
-  updateDB();
   updateRoles(role.guild);
 });
 
+bot.on("roleDelete", role => {
+  roleDelete(role);
+});
+
+bot.on("roleUpdate", role => {
+  roleUpdate(role);
+});
+
+// message event
 bot.on("message", msg => {
   if (msg.author != bot.user) { // if this is not here it would respond to itself
     // update xp and lvl of the user who talked
@@ -382,6 +401,65 @@ function updateRoles(guild) {
           });
         }(results[i]));
       }
+    }
+  });
+}
+
+function deleteGuild(guild) {
+  updateDB();
+  var guildId = guild.id;
+  var roles = guild.roles.array();
+  mysqlConn.query("DELETE FROM server WHERE id = \""+guildId+"\"", (error, results, fields) => {
+    if (error) {
+      console.log(error);
+    } else {
+      for (var i = 0; i < roles.length; i++) {
+        mysqlConn.query("DELETE FROM role WHERE id = \""+roles[i].id+"\"", (error, results, fields) => {
+          if (error) {
+            console.log(error);
+          } else {
+            mysqlConn.query("DELETE FROM server_has_role WHERE server_id = \""+guildId+"\"", (error, results, fields) => {
+              if (error) {
+                console.log(error);
+              }
+            });
+          }
+        });
+      }
+    }
+  });
+}
+
+function updateGuild(guild) {
+  updateDB();
+  var guildId = guild.id;
+  mysqlConn.query("UPDATE server SET name = \""+guild.name+"\" WHERE id = \""+guildId+"\"", (error, results, fields) => {
+    if (error) {
+      console.log(error);
+    }
+  });
+}
+
+function deleteRole(role) {
+  updateDB();
+  mysqlConn.query("DELETE FROM role WHERE id = \""+role.id+"\"", (error, results, fields) => {
+    if (error) {
+      console.log(error);
+    } else {
+      mysqlConn.query("DELETE FROM server_has_role WHERE role_id = \""+role.id+"\"", (error, results, fields) => {
+        if (error) {
+          console.log(error);
+        }
+      });
+    }
+  });
+}
+
+function updateRole(role) {
+  updateDB();
+  mysqlConn.query("UPDATE role SET name = \""+role.name+"\" WHERE id = \""+role.id+"\"", (error, results, fields) => {
+    if (error) {
+      console.log(error);
     }
   });
 }
