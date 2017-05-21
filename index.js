@@ -6,6 +6,7 @@ const fs = require("fs-extra");
 const youtubedl = require("youtube-dl");
 const ffmpeg = require("fluent-ffmpeg");
 const helpFile = require('./help');
+const tokens = require('./tokens');
 const mysql = require('mysql');
 var mysqlConn = mysql.createConnection({
   host: "localhost",
@@ -15,8 +16,8 @@ var mysqlConn = mysql.createConnection({
 });
 mysqlConn.connect();
 
-var discordToken = "DISCORD_TOKEN";
-var cleverbotToken = "CLEVERBOT_TOKEN";
+var discordToken = tokens.discord || "TOKEN HERE";
+var cleverbotToken = tokens.cleverbot || "TOKEN HERE";
 
 bot.on('ready', () => {
   console.log("logged in as " + bot.user.username + "!");
