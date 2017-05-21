@@ -238,24 +238,26 @@ bot.on("message", msg => {
         }
       }
     }
-    if (msg.mentions.users.array()[0].id === bot.user.id) {
-      var found = false;
-      for (var i = 0; i < cleverbots.length; i++) {
-        if (cleverbots[i].username === msg.author.username) {
-          talkBot(between('"', msg.content), cleverbots[i].cleverbot);
-          found = true;
-          break;
+    if (msg.mentions.users.array()[0]) {
+      if (msg.mentions.users.array()[0].id === bot.user.id) {
+        var found = false;
+        for (var i = 0; i < cleverbots.length; i++) {
+          if (cleverbots[i].username === msg.author.username) {
+            talkBot(between('"', msg.content), cleverbots[i].cleverbot);
+            found = true;
+            break;
+          }
         }
-      }
-      if (!found) {
-        cleverbots.push({username: msg.author.username, cleverbot:new Cleverbot()});
-        cleverbots[cleverbots.length-1].cleverbot.configure({botapi: cleverbotToken});
-        talkBot(between('""', msg.content), cleverbots[cleverbots.length-1].cleverbot);
-      }
-      function talkBot(message, cleverbot) {
-        cleverbot.write(message, function (response) {
-          msg.reply(response.output);
-        });
+        if (!found) {
+          cleverbots.push({username: msg.author.username, cleverbot:new Cleverbot()});
+          cleverbots[cleverbots.length-1].cleverbot.configure({botapi: cleverbotToken});
+          talkBot(between('""', msg.content), cleverbots[cleverbots.length-1].cleverbot);
+        }
+        function talkBot(message, cleverbot) {
+          cleverbot.write(message, function (response) {
+            msg.reply(response.output);
+          });
+        }
       }
     }
     if (getWord(msg.content) == "deleteMessages") {
