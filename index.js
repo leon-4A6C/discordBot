@@ -35,7 +35,7 @@ bot.on("guildDelete", guild => {
 });
 
 bot.on("guildUpdate", guild => {
-  updateGuild(guild);
+  updateDB();
 });
 
 // guild member events
@@ -54,7 +54,7 @@ bot.on("roleDelete", role => {
 });
 
 bot.on("roleUpdate", role => {
-  roleUpdate(role);
+  updateDB();
 });
 
 // message event
@@ -329,6 +329,8 @@ function updateDB() {
           mysqlConn.query("INSERT INTO server(id, name) VALUES (\""+guilds[guildCount].id+"\", \""+guilds[guildCount].name+"\")", (error, results, fields) => {
             // console.log(error, results, fields);
           });
+        } else {
+          updateGuild(guilds[guildCount]);
         }
       });
       var users = guilds[guildCount].members.array();
@@ -356,21 +358,23 @@ function updateDB() {
       var roles = guilds[guildCount].roles.array();
       // console.log(roles);
       for (var i = 0; i < roles.length; i++) {
-        (function(rolesCount) {
-          mysqlConn.query("SELECT id FROM role WHERE id = \""+roles[rolesCount].id+"\"", (error, results, fields) =>{
+        (function(role) {
+          mysqlConn.query("SELECT id FROM role WHERE id = \""+role.id+"\"", (error, results, fields) =>{
             if (error) {
               console.log(error);
             }
-            if (results.length == 0 && roles[rolesCount].id != guilds[guildCount].defaultRole.id) {
-              mysqlConn.query("INSERT INTO role(id, name) VALUES (\""+roles[rolesCount].id+"\", \""+roles[rolesCount].name+"\")", (error, results, fields) => {
+            if (results.length == 0 && role.id != guilds[guildCount].defaultRole.id) {
+              mysqlConn.query("INSERT INTO role(id, name) VALUES (\""+role.id+"\", \""+role.name+"\")", (error, results, fields) => {
                 // console.log(error, results, fields);
-                mysqlConn.query("INSERT INTO server_has_role(server_id, role_id) VALUES (\""+guilds[guildCount].id+"\", \""+roles[rolesCount].id+"\")", (error, results, fields) => {
+                mysqlConn.query("INSERT INTO server_has_role(server_id, role_id) VALUES (\""+guilds[guildCount].id+"\", \""+role.id+"\")", (error, results, fields) => {
                   // console.log(error, results, fields);
                 });
               });
+            } else {
+              updateRole(role);
             }
           });
-        }(i));
+        }(roles[i]));
       }
     }(i));
   }
@@ -431,7 +435,6 @@ function deleteGuild(guild) {
 }
 
 function updateGuild(guild) {
-  updateDB();
   var guildId = guild.id;
   mysqlConn.query("UPDATE server SET name = \""+guild.name+"\" WHERE id = \""+guildId+"\"", (error, results, fields) => {
     if (error) {
@@ -456,7 +459,6 @@ function deleteRole(role) {
 }
 
 function updateRole(role) {
-  updateDB();
   mysqlConn.query("UPDATE role SET name = \""+role.name+"\" WHERE id = \""+role.id+"\"", (error, results, fields) => {
     if (error) {
       console.log(error);
