@@ -8,7 +8,7 @@ const ffmpeg = require("fluent-ffmpeg");
 const helpFile = require('./help');
 var tokens = require('./tokens');
 if (!tokens) {
-  console.error("use node install.js to install");
+  console.error("use, node install.js, to install");
 }
 const mysql = require('mysql');
 var mysqlConn = mysql.createConnection({
