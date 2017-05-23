@@ -6,7 +6,10 @@ const fs = require("fs-extra");
 const youtubedl = require("youtube-dl");
 const ffmpeg = require("fluent-ffmpeg");
 const helpFile = require('./help');
-const tokens = require('./tokens');
+var tokens = require('./tokens');
+if (!tokens) {
+  console.error("use node install.js to install");
+}
 const mysql = require('mysql');
 var mysqlConn = mysql.createConnection({
   host: tokens.DBhost || "localhost",

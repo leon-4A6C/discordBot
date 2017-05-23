@@ -2,7 +2,7 @@
   "discord": "DISCORD_TOKEN",
   "cleverbot": "CLEVERBOT_TOKEN",
   "DBhost": "localhost",
-  "DBusername": "discordbot",
-  "DBpassword": "discordbot",
+  "DBusername": "discord",
+  "DBpassword": "discord",
   "DBname": "DiscordBot"
 }
