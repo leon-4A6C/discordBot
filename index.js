@@ -272,30 +272,34 @@ bot.on("message", msg => {
       }
     }
     if (msg.mentions.users.array()[0]) {
-      if (msg.mentions.users.array()[0].id === bot.user.id) {
-        mysqlConn.query("SELECT botHistory FROM user WHERE id = \""+msg.author.id+"\"", (error, results, fields) => {
-          var cs = '';
-          if (results[0].botHistory != null || results[0].botHistory != "null") {
-            cs = results[0].botHistory;
-          }
-          // creates new cleverbot and gives it the api key and history if the user has it
-          var cleverbot = new Cleverbot({key: cleverbotToken, cs: cs});
-          cleverbot.say(between('"', msg.content), (output, error) => {
-            if (error) {
-              console.log(error);
-            }else {
-              msg.reply(output);
-              // updates history on DB
-              mysqlConn.query("UPDATE user SET botHistory = \""+cleverbot.options.cs+"\" WHERE id = \""+msg.author.id+"\"", (error, results, fields) => {
-                if (error) {
-                  console.log(error);
-                } else {
-                  cleverbot = null;
-                }
-              });
+      try {
+        if (msg.mentions.users.array()[0].id === bot.user.id) {
+          mysqlConn.query("SELECT botHistory FROM user WHERE id = \""+msg.author.id+"\"", (error, results, fields) => {
+            var cs = '';
+            if (results[0].botHistory != null || results[0].botHistory != "null") {
+              cs = results[0].botHistory;
             }
+            // creates new cleverbot and gives it the api key and history if the user has it
+            var cleverbot = new Cleverbot({key: cleverbotToken, cs: cs});
+            cleverbot.say(between('"', msg.content), (output, error) => {
+              if (error) {
+                console.log(error);
+              }else {
+                msg.reply(output);
+                // updates history on DB
+                mysqlConn.query("UPDATE user SET botHistory = \""+cleverbot.options.cs+"\" WHERE id = \""+msg.author.id+"\"", (error, results, fields) => {
+                  if (error) {
+                    console.log(error);
+                  } else {
+                    cleverbot = null;
+                  }
+                });
+              }
+            });
           });
-        });
+        }
+      } catch (e) {
+        console.log(e);
       }
     }
     if (getWord(msg.content) == "deleteMessages") {
