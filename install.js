@@ -58,11 +58,11 @@ function install() {
   const ls = spawn('npm', ['install']);
 
   ls.stdout.on('data', (data) => {
-    console.dir(`${data}`, {colors:true});
+    console.dir(data.toString(), {colors:true});
   });
 
   ls.stderr.on('data', (data) => {
-    console.dir(`${data}`, {colors:true});
+    console.dir(data.toString(), {colors:true});
   });
 
   ls.on('close', (code) => {
