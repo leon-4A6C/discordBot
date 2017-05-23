@@ -60,6 +60,11 @@
     "description": "gets your user status, you gain xp by typing"
   },
   {
+    "title":"leaderboard",
+    "command":"leaderboard",
+    "description": "gets guild and global leaderboard"
+  },
+  {
     "title":"set minimum lvl of a role",
     "command":"set min_lvl role_name the_min_lvl",
     "description": "sets the min_lvl of a role, you need to be **admin** for this"
