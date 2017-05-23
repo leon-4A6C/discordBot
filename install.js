@@ -5,35 +5,69 @@ var data = require("./tokens_default");
 
 // used to get user input
 function prompt(question, callback) {
-  var stdin = process.stdin,
-      stdout = process.stdout;
+    var stdin = process.stdin,
+        stdout = process.stdout;
 
-  stdin.resume();
-  stdout.write(question);
+    stdin.resume();
+    stdout.write(question);
 
-  stdin.once('data', function (data) {
-    callback(data.toString().trim());
-  });
+    stdin.once('data', function (data) {
+        callback(data.toString().trim());
+    });
 }
 
 if (!fs.existsSync("node_modules")) {
+  install();
+} else {
+  prompt("do you want to do a completely reinstall y/n ", (input) => {
+    if (input == "y") {
+      if (deleteRecursive("node_modules")) {
+        console.log("done deleting old files");
+        install();
+      } else {
+        throw "something went wrong!";
+      }
+    } else if(input == "n") {
+      createToken();
+    }
+  });
+}
+
+function deleteRecursive(path) {
+  if (fs.existsSync(path)) {
+    files = fs.readdirSync(path);
+    if (!files.length == 0) {
+      files.forEach((file, index) => {
+        var current = path+"/"+file;
+        if (fs.lstatSync(current).isDirectory()) {
+          deleteRecursive(current);
+        } else {
+          fs.unlinkSync(current);
+        }
+      });
+    }
+    fs.rmdirSync(path);
+    return true
+  } else {
+    return false
+  }
+}
+
+function install() {
   const spawn = child.spawn;
   const ls = spawn('npm', ['install']);
 
   ls.stdout.on('data', (data) => {
-    console.log(`${data}`);
+    console.dir(`${data}`, {colors:true});
   });
 
   ls.stderr.on('data', (data) => {
-    console.log(`${data}`);
+    console.dir(`${data}`, {colors:true});
   });
 
   ls.on('close', (code) => {
-    console.log(`${code}`);
     createToken();
   });
-} else {
-  createToken();
 }
 
 function createToken() {
@@ -82,7 +116,8 @@ function createToken() {
       if (err) throw err;
       console.log('The file has been saved!');
       console.log("you can now start the bot by typing\nnode index.js");
-      throw "done!";
+      console.log("done!");
+      process.exit();
     });
   }
 }
