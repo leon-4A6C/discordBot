@@ -72,6 +72,9 @@ bot.on("message", msg => {
           updateRoles(msg.guild);
           msg.reply("you reached lvl **"+newLvl+"** congrats");
         }
+        if (newXp < 0) {
+          newXp = 0;
+        }
         mysqlConn.query("UPDATE user SET xp = "+ newXp +", lvl = "+ newLvl +" WHERE id = "+msg.author.id, (error, result, fields)=>{
           // console.log(error, result, fields);
         });
@@ -119,11 +122,39 @@ bot.on("message", msg => {
       }
     }
     if (getWord(msg.content) === "stats") {
-      mysqlConn.query("SELECT xp, lvl FROM user WHERE id = "+ msg.author.id, (error, result, fields)=>{
+      mysqlConn.query("SELECT xp, lvl FROM user WHERE id = \""+ msg.author.id+"\"", (error, result, fields)=>{
         mysqlConn.query("SELECT lvl_multiplier FROM server WHERE id = \""+msg.guild.id+"\"", (error, resultGuild, fields) => {
           var lvlMultiplier = resultGuild[0].lvl_multiplier;
           var nextLvlThreshold = Math.floor((Math.pow((result[0].lvl * (lvlMultiplier * 2)), 2)  + 100) * (lvlMultiplier * 2));
           msg.reply("these are your stats: \nxp: " + result[0].xp + "\nlvl: " + result[0].lvl + "\nxp needed for next lvl: " + nextLvlThreshold);
+        });
+      });
+    }
+    if (getWord(msg.content) === "leaderboard") {
+      var reply = "";
+      mysqlConn.query("SELECT xp, lvl, username FROM server_has_user INNER JOIN user ON user.id = user_id INNER JOIN server ON server.id = server_id WHERE server.id = \""+msg.guild.id+"\" ORDER BY lvl DESC, xp DESC LIMIT 5", (error, results, fields) => {
+        if (error) {
+          console.log(error);
+        } else {
+          reply += "\n**top guild**\n";
+          for (var i = 0; i < results.length; i++) {
+            reply += (i+1)+". " + results[i].username + " is lvl: " + results[i].lvl + " and has " + results[i].xp + " xp\n";
+          }
+        }
+        mysqlConn.query("SELECT xp, lvl, username FROM user ORDER BY lvl DESC, xp DESC LIMIT 5", (error, results, fields) => {
+          if (error) {
+            console.log(error);
+          } else {
+            reply += "\n**top global**\n";
+            for (var i = 0; i < results.length; i++) {
+              reply += (i+1)+". " + results[i].username + " is lvl: " + results[i].lvl + " and has " + results[i].xp + " xp\n";
+            }
+          }
+          if (reply) {
+            msg.reply(reply);
+          } else {
+            msg.reply("error");
+          }
         });
       });
     }
