@@ -1,7 +1,7 @@
 const Discord = require("discord.js");
 const bot = new Discord.Client();
 const http = require('http');
-const Cleverbot = require("./cleverbot.js");
+const Cleverbot = require("./objects/cleverbot.js");
 const fs = require("fs-extra");
 const youtubedl = require("youtube-dl");
 const ffmpeg = require("fluent-ffmpeg");
