@@ -17,3 +17,4 @@ you can just update by typing git pull in the server's folder
 ```sh
 git pull
 ```
+if it doesn't work after an update try using node install.js to reinstall it completely.
