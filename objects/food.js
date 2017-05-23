@@ -7,5 +7,8 @@ function Food(hp) {
   this.hp = hp;
 }
 
+Food.prototype = {
+  
+};
 
 module.exports = Food;
