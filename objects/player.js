@@ -11,11 +11,19 @@ function Player(name, xp, lvl) {
 Player.prototype = {
   attack: function(weapon) {
     // TODO: attack an opponent
+    for (var i = 0; i < this.equipedWeapons.length; i++) {
+      this.equipedWeapons[i]
+    }
   },
   eat: function(food) {
     // TODO: eat food
   },
-  equipItem: function() {
-    // TODO: equip an item
+  equipArmor: function(armor) {
+    // TODO: equip armor, boots, pants, harness, helmet, gloves
+  },
+  equipWeapon: function(weapon) {
+    // TODO: equip a weapon
   }
 };
+
+module.exports = Player;

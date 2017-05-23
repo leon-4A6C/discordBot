@@ -8,4 +8,4 @@ function Food(hp) {
 }
 
 
-module.exports = food;
+module.exports = Food;
