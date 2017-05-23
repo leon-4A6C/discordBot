@@ -25,6 +25,7 @@ var cleverbotToken = tokens.cleverbot || "TOKEN HERE";
 bot.on('ready', () => {
   console.log("logged in as " + bot.user.username + "!");
   updateDB();
+  bot.user.setGame("help for help");
 });
 
 // guild events
