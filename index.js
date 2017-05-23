@@ -66,7 +66,14 @@ bot.on("message", msg => {
     mysqlConn.query("SELECT * FROM user WHERE id = "+ msg.author.id, (error, result, fields) => {
       mysqlConn.query("SELECT lvl_multiplier FROM server WHERE id = \""+msg.guild.id+"\"", (error, resultGuild, fields) => {
         var lvlMultiplier = resultGuild[0].lvl_multiplier;
-        var newXp = result[0].xp + (countWords(msg.content)-countDoubles(msg.content));
+        var xp = (countWords(msg.content)-countDoubles(msg.content));
+        // clamp it between 0 and 50
+        if (xp < 0) {
+          xp = 0;
+        } else if (xp > 50) {
+          xp = 50
+        }
+        var newXp = result[0].xp + xp;
         var nextLvlThreshold = Math.floor((Math.pow((result[0].lvl * (lvlMultiplier * 2)), 2)  + 100) * (lvlMultiplier * 2));
         var newLvl = result[0].lvl;
         if (newXp >= nextLvlThreshold) {
@@ -74,9 +81,6 @@ bot.on("message", msg => {
           newXp -= nextLvlThreshold;
           updateRoles(msg.guild);
           msg.reply("you reached lvl **"+newLvl+"** congrats");
-        }
-        if (newXp < 0) {
-          newXp = 0;
         }
         mysqlConn.query("UPDATE user SET xp = "+ newXp +", lvl = "+ newLvl +" WHERE id = "+msg.author.id, (error, result, fields)=>{
           // console.log(error, result, fields);
