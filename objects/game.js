@@ -13,6 +13,6 @@ console.log(player2.name + " health", player1.attack(player2, "left", 0));
 module.exports = {
   Food: Food,
   Armor: Armor,
-  Weapon: Weapon
+  Weapon: Weapon,
   Player: Player
 };
