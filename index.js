@@ -263,7 +263,16 @@ bot.on("message", msg => {
       var amount = between("-", msg.content);
       var message = between('"', msg.content);
       if (msg.mentions.everyone === true) {
-        // TODO: spam iedereen
+        for (var i = 0; i < msg.guild.members.array().length; i++) {
+          msg.guild.members.array()[i].send(message).catch(console.error);
+        }
+      }
+      if (msg.mentions.roles.array()[0]) {
+        for (var i = 0; i < msg.mentions.roles.array().length; i++) {
+          for (var j = 0; j < msg.mentions.roles.array()[i].members.array().length; j++) {
+            msg.mentions.roles.array()[i].members.array()[j].send(message).catch(console.error);
+          }
+        }
       }
       for (var i = 0; i < mentions.length; i++) {
         msg.channel.send(mentions[i].username +  " is being spammed!");
