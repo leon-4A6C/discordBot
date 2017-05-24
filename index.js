@@ -62,7 +62,7 @@ bot.on("roleUpdate", role => {
 
 // message event
 bot.on("message", msg => {
-  if (msg.author != bot.user) { // if this is not here it would respond to itself
+  if (!msg.author.bot) { // if this is not here it would respond to itself and other bots, bots would get xp and stuff
     // update xp and lvl of the user who talked
     mysqlConn.query("SELECT * FROM user WHERE id = "+ msg.author.id, (error, result, fields) => {
       mysqlConn.query("SELECT lvl_multiplier FROM server WHERE id = \""+msg.guild.id+"\"", (error, resultGuild, fields) => {
@@ -265,8 +265,10 @@ bot.on("message", msg => {
       if (msg.mentions.everyone === true) {
         msg.channel.send("everyone is being spammed!");
         for (var i = 0; i < msg.guild.members.array().length; i++) {
-          for (var i = 0; i < amount; i++) {
-            msg.guild.members.array()[i].send(message).catch(console.error);
+          if (!msg.guild.members.array()[i].user.bot) {
+            for (var j = 0; j < amount; j++) {
+              msg.guild.members.array()[i].send(message).catch(console.error);
+            }
           }
         }
       }
@@ -274,8 +276,10 @@ bot.on("message", msg => {
         for (var i = 0; i < msg.mentions.roles.array().length; i++) {
           msg.channel.send("everyone in "+msg.mentions.roles.array()[i].name+" is being spammed!");
           for (var j = 0; j < msg.mentions.roles.array()[i].members.array().length; j++) {
-            for (var i = 0; i < amount; i++) {
-              msg.mentions.roles.array()[i].members.array()[j].send(message).catch(console.error);
+            if (!msg.mentions.roles.array()[i].members.array()[j].user.bot) {
+              for (var k = 0; k < amount; k++) {
+                msg.mentions.roles.array()[i].members.array()[j].send(message).catch(console.error);
+              }
             }
           }
         }
