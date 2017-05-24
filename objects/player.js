@@ -1,3 +1,4 @@
+var Weapon = require("./weapon");
 // player
 function Player(name, xp, lvl) {
   this.name = name || "unnamed";
@@ -11,25 +12,29 @@ function Player(name, xp, lvl) {
     gloves: null
   };
   this.equipedWeapons = {
-    left: new Hands(5),
-    right: new Hands(10)
+    left: new Weapon.Hand(5),
+    right: new Weapon.Hand(10)
   };
   this.items = [];
+  // max hp for the player it self
   this.maxHp = 10;
+  // hp from the player it self
   this.hp = 10;
+  // totalHp of the player including armor and buffs
   this.totalHp = 10;
 }
 
 Player.prototype = {
   // weapon left(0) or right(1)
-  attack: function(weapon, opponent) {
+  // attack returns the opponent's new health
+  attack: function(opponent, weapon, action) {
     if (weapon === 0) {
       weapon = "left";
-    } else {
+    } else if(weapon === 1) {
       weapon = "right";
     }
-    // TODO: attack an opponent
-    opponent.hp -= this.equipedWeapons[weapon].dmg;
+    var newOpponentHp = opponent.dmg(this.equipedWeapons[weapon].attackDmg(action));
+    return newOpponentHp
   },
   eat: function(food) {
     // TODO: eat food
@@ -73,7 +78,15 @@ Player.prototype = {
       slot = "right";
     }
     // equip weapon
-    this.equipedArmor[slot] = weapon;
+    this.equipedWeapons[slot] = weapon;
+  },
+  // take damage, returns new hp from this player
+  dmg: function(dmg) {
+    this.hp -= dmg;
+    if (this.hp < 0) {
+      this.hp = 0;
+    }
+    return this.hp
   }
 };
 

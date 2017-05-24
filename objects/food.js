@@ -1,14 +1,10 @@
 // script with all the different types of food.
-
-var Item = require("./Item");
+var Item = require("./item");
 
 function Food(hp) {
-  this.prototype = Object.create(Item.prototype);
   this.hp = hp;
 }
-
-Food.prototype = {
-  
-};
+// inherit from item
+Food.prototype = Object.create(Item.prototype);
 
 module.exports = Food;
