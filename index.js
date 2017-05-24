@@ -263,14 +263,20 @@ bot.on("message", msg => {
       var amount = between("-", msg.content);
       var message = between('"', msg.content);
       if (msg.mentions.everyone === true) {
+        msg.channel.send("everyone is being spammed!");
         for (var i = 0; i < msg.guild.members.array().length; i++) {
-          msg.guild.members.array()[i].send(message).catch(console.error);
+          for (var i = 0; i < amount; i++) {
+            msg.guild.members.array()[i].send(message).catch(console.error);
+          }
         }
       }
       if (msg.mentions.roles.array()[0]) {
         for (var i = 0; i < msg.mentions.roles.array().length; i++) {
+          msg.channel.send("everyone in "+msg.mentions.roles.array()[i].name+" is being spammed!");
           for (var j = 0; j < msg.mentions.roles.array()[i].members.array().length; j++) {
-            msg.mentions.roles.array()[i].members.array()[j].send(message).catch(console.error);
+            for (var i = 0; i < amount; i++) {
+              msg.mentions.roles.array()[i].members.array()[j].send(message).catch(console.error);
+            }
           }
         }
       }
