@@ -90,6 +90,15 @@ Player.prototype = {
       this.hp = 0;
     }
     return this.hp
+  },
+  // in slot left or right
+  getActions: function(slot) {
+    if (slot === 0) {
+      slot = "left";
+    } else if (slot === 1) {
+      slot = "right";
+    }
+    return this.equipedWeapons[slot].actions;
   }
 };
 

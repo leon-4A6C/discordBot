@@ -61,19 +61,19 @@ function Hand(targetLvl) {
     {
       name: "punch",
       dmg_multiplier: 1,
-      usage: 5,
+      usage: 10,
       used: 0
     },
     {
       name: "hook",
       dmg_multiplier: 1.1,
-      usage: 3,
+      usage: 5,
       used: 0
     },
     {
       name: "upper cut",
       dmg_multiplier: 1.5,
-      usage: 1,
+      usage: 3,
       used: 0
     }
   ];
