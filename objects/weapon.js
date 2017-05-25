@@ -2,7 +2,13 @@
 
 var Item = require("./item");
 
-function Weapon(dmg) {
+function Weapon(dmg, targetLvl) {
+  this.itemId;
+  var targetLvlWiggleRoom = Math.floor(Math.random()*targetLvl-targetLvl/2);
+  this.lvl = targetLvl + targetLvlWiggleRoom;
+  if (this.lvl <= 0) {
+    this.lvl = 1;
+  }
   this.dmg = dmg;
   this.actions = [
     {
@@ -34,8 +40,14 @@ Weapon.prototype.resetActions = function() {
   }
 }
 
-function Hand(dmg) {
+function Hand(dmg, targetLvl) {
+  this.itemId = 0;
   this.name = "hand";
+  var targetLvlWiggleRoom = Math.floor(Math.random()*targetLvl-targetLvl/2);
+  this.lvl = targetLvl + targetLvlWiggleRoom;
+  if (this.lvl <= 0) {
+    this.lvl = 1;
+  }
   this.dmg = dmg || 5;
   this.actions = [
     {

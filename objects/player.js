@@ -1,9 +1,11 @@
 var Weapon = require("./weapon");
 // player
-function Player(name, xp, lvl) {
+function Player(name, id) {
+  // player id from discord user id
+  this.id;
   this.name = name || "unnamed";
-  this.xp = xp || 0;
-  this.lvl = lvl || 0;
+  this.xp = 0;
+  this.lvl = 0;
   this.equipedArmor = {
     boots: null,
     pants: null,
@@ -19,9 +21,9 @@ function Player(name, xp, lvl) {
   // max hp for the player it self
   this.maxHp = 10;
   // hp from the player it self
-  this.hp = 10;
+  this.hp = this.maxHp;
   // totalHp of the player including armor and buffs
-  this.totalHp = 10;
+  this.totalHp = this.hp;
 }
 
 Player.prototype = {
