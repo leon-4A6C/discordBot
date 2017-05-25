@@ -17,15 +17,29 @@ var mysqlConn = mysql.createConnection({
   password: tokens.DBpassword || "discord",
   database: tokens.DBname || "DiscordBot"
 });
+var running = false;
 mysqlConn.connect();
 
 var discordToken = tokens.discord || "TOKEN HERE";
 var cleverbotToken = tokens.cleverbot || "TOKEN HERE";
 
 bot.on('ready', () => {
+  running = true;
   console.log("logged in as " + bot.user.username + "!");
   updateDB();
   bot.user.setGame("help for help");
+});
+
+bot.on("disconnect", (event) => {
+  running = false;
+  // try to reconnect every second when it gets disconnected
+  var interval = setInterval(() => {
+    if (running == true) {
+      clearInterval(interval);
+    } else {
+      bot.login(discordToken);
+    }
+  }, 1000);
 });
 
 // guild events
