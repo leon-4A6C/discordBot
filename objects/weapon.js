@@ -1,15 +1,19 @@
+var Item = require("./item");
 // script with all the different weapons.
 
-var Item = require("./item");
-
-function Weapon(dmg, targetLvl) {
+function Weapon(targetLvl) {
+  this.name = "unnamed";
   this.itemId;
+  this.maxLvl = 5;
   var targetLvlWiggleRoom = Math.floor(Math.random()*targetLvl-targetLvl/2);
   this.lvl = targetLvl + targetLvlWiggleRoom;
   if (this.lvl <= 0) {
     this.lvl = 1;
   }
-  this.dmg = dmg;
+  if (this.lvl > this.maxLvl) {
+    this.lvl = this.maxLvl;
+  }
+  this.dmg = Math.ceil((Math.random()*5+5)*this.lvl*5)*0.25;
   this.actions = [
     {
       // name of the action/attack
@@ -40,15 +44,19 @@ Weapon.prototype.resetActions = function() {
   }
 }
 
-function Hand(dmg, targetLvl) {
+function Hand(targetLvl) {
   this.itemId = 0;
   this.name = "hand";
+  this.maxLvl = 5;
   var targetLvlWiggleRoom = Math.floor(Math.random()*targetLvl-targetLvl/2);
   this.lvl = targetLvl + targetLvlWiggleRoom;
   if (this.lvl <= 0) {
     this.lvl = 1;
   }
-  this.dmg = dmg || 5;
+  if (this.lvl > this.maxLvl) {
+    this.lvl = this.maxLvl;
+  }
+  this.dmg = Math.ceil((Math.random()*5+5)*this.lvl*5*0.25);
   this.actions = [
     {
       name: "punch",

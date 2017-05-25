@@ -22,7 +22,10 @@ var items =
 
     ],
     harness: [
-
+      {
+        item: Armor.Shirt,
+        dropChance: 0.05
+      }
     ],
     helmet: [
 
@@ -34,20 +37,29 @@ var items =
   // all the weapons
   weapons: {
     left: [
-      Weapon.hand
+      {
+        item: Weapon.Hand,
+        dropChance: 0
+      }
     ],
     right: [
-      Weapon.hand
+      {
+        item: Weapon.Hand,
+        dropChance: 0
+      }
     ]
   },
   // all the different foods
   food: [
-    Food.Donut
+    {
+      item: Food.Donut,
+      dropChance: 0.1
+    }
   ]
 };
 
 var enemies = [
-  
+
 ];
 
 // export so that the main file can require it all at once

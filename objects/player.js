@@ -1,4 +1,4 @@
-var Weapon = require("./weapon");
+var Game = require("./game");
 // player
 function Player(name, id) {
   // player id from discord user id
@@ -13,9 +13,10 @@ function Player(name, id) {
     helmet: null,
     gloves: null
   };
+  // beginners Weapons
   this.equipedWeapons = {
-    left: new Weapon.Hand(5),
-    right: new Weapon.Hand(10)
+    left: new Game.items.weapons.left[0].item(this.lvl),
+    right: new Game.items.weapons.left[0].item(this.lvl)
   };
   this.items = [];
   // max hp for the player it self
