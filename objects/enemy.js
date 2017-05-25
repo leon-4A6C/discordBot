@@ -1,4 +1,5 @@
 var Game = require("./game"); // used to generate armor and weapons
+var Player = require("./player");
 // basic enemy
 // give it a lvl you want it to have
 function Enemy(name, targetLvl) {
@@ -38,7 +39,7 @@ function Enemy(name, targetLvl) {
     }
   }
 }
-Enemy.prototype = Object.create(Game.Player.prototype);
+Enemy.prototype = Object.create(Player.prototype);
 
 // gets a random weapon, left(0) or right(1) in type
 Enemy.prototype.getRandomWeapon = function(type) {
@@ -117,10 +118,12 @@ Enemy.prototype.getDropItems = function() {
   return dropItems;
 }
 
-// for testing porposes
-for (var i = 0; i < 10; i++) {
-  console.log(new Enemy(null, 5));
-  // new Enemy(null, 5);
-  // add new line to see it better
-  console.log();
-}
+// // for testing porposes
+// for (var i = 0; i < 10; i++) {
+//   console.log(new Enemy(null, 5));
+//   // new Enemy(null, 5);
+//   // add new line to see it better
+//   console.log();
+// }
+
+module.exports = Enemy;
