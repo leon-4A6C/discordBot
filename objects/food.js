@@ -3,6 +3,7 @@ var Item = require("./item");
 
 function Food(targetLvl) {
   this.itemId;
+  this.type = "food";
   this.maxLvl = 5;
   var targetLvlWiggleRoom = Math.floor(Math.random()*targetLvl-targetLvl/2);
   this.lvl = targetLvl + targetLvlWiggleRoom;
@@ -24,6 +25,7 @@ Food.prototype = Object.create(Item.prototype);
 function Donut(targetLvl) {
   this.itemId = 1;
   this.name = "donut";
+  this.type = "food";
   this.maxLvl = 5;
   var targetLvlWiggleRoom = Math.floor(Math.random()*targetLvl-targetLvl/2);
   this.lvl = targetLvl + targetLvlWiggleRoom;

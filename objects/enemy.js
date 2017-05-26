@@ -23,7 +23,8 @@ function Enemy(name, targetLvl) {
   };
   this.maxDropItems = 5;
   // the items it is going to drop if the user wins
-  this.dropItems = this.getDropItems();
+  this.items = this.getDropItems();
+  this.dropItems = this.items;
   // hp multiplier for easier enemy creation with more hp, make it harder, for something like bosses
   this.hpMultiplier = 5;
   // max hp for the enemy it self, hp when full
@@ -118,12 +119,42 @@ Enemy.prototype.getDropItems = function() {
   return dropItems;
 }
 
-// // for testing porposes
-// for (var i = 0; i < 10; i++) {
-//   console.log(new Enemy(null, 5));
-//   // new Enemy(null, 5);
-//   // add new line to see it better
-//   console.log();
-// }
+// enemy ai, its mostly random
+Enemy.prototype.doMove = function(opponent) {
+  // if low health eat
+  if (this.hp < (this.maxHp/2)) {
+    for (var i = 0; i < this.items.length; i++) {
+      if (this.items[i].type == "food") {
+        this.eat(this.items[i]);
+        // remove item, from items because he ate it
+        this.items.splice(i, 1);
+        break;
+      }
+    }
+  } else { //else attack
+    var selectedWeapon = Math.round(Math.random());
+    var options = ["left", "right"];
+    // check if there is a weapon
+    if (this.equipedWeapons[options[selectedWeapon]]) {
+      // get actions for that weapon
+      var actions = this.getActions(selectedWeapon);
+      // attack with a random action
+      this.attack(opponent, options[selectedWeapon], Math.floor(Math.random()*actions.length));
+    } else { // if not check if there is a weapon in the other hand
+      if (selectedWeapon === 0) {
+        selectedWeapon = 1;
+      } else {
+        selectedWeapon = 0;
+      }
+      // if there is attack with it
+      if (this.equipedWeapons[options[selectedWeapon]]) {
+        // get actions for that weapon
+        var actions = this.getActions(selectedWeapon);
+        // attack with a random action
+        this.attack(opponent, options[selectedWeapon], Math.floor(Math.random()*actions.length));
+      }
+    }
+  }
+}
 
 module.exports = Enemy;

@@ -2,7 +2,7 @@ var Enemy = require("./enemy");
 var Player = require("./player");
 var Game = require("./game");
 var player = new Player("leon");
-var enemy = new Enemy("akram", 5);
+var enemy = new Enemy("akram", 3);
 console.log("battle has begon");
 console.log(enemy.name + " has " + enemy.totalHp + " HP");
 // used to get user input
@@ -38,8 +38,17 @@ function battle() {
     }
     console.log(enemy.name + " has " + hp + " HP");
     if (!done) {
-      battle();
+      enemy.doMove(player);
+      console.log("your new hp is " + player.hp);
+      if (player.hp <= 0) {
+        done = true;
+        console.log("enemy won the battle!");
+        process.exit();
+      } else {
+        battle();
+      }
     } else {
+      // TODO: add xp
       console.log("you have won the battle!");
       process.exit();
     }

@@ -20,7 +20,7 @@ function Player(name, id) {
   };
   this.items = [];
   // max hp for the player it self
-  this.maxHp = 10;
+  this.maxHp = 50;
   // hp from the player it self
   this.hp = this.maxHp;
   // totalHp of the player including armor and buffs
@@ -30,13 +30,13 @@ function Player(name, id) {
 Player.prototype = {
   // weapon left(0) or right(1)
   // attack returns the opponent's new health
-  attack: function(opponent, weapon, action) {
+  attack: function(opponent, weapon, actionIndex) {
     if (weapon === 0) {
       weapon = "left";
     } else if(weapon === 1) {
       weapon = "right";
     }
-    var newOpponentHp = opponent.dmg(this.equipedWeapons[weapon].attackDmg(action));
+    var newOpponentHp = opponent.dmg(this.equipedWeapons[weapon].attackDmg(actionIndex));
     return newOpponentHp
   },
   eat: function(food) {
