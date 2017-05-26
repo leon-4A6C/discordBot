@@ -20,6 +20,11 @@ var mysqlConn = mysql.createConnection({
 var running = false;
 mysqlConn.connect();
 
+mysqlConn.on('error', (err) => {
+  console.log(err);
+  mysqlConn.connect();
+});
+
 var discordToken = tokens.discord || "TOKEN HERE";
 var cleverbotToken = tokens.cleverbot || "TOKEN HERE";
 
