@@ -15,8 +15,8 @@ function Player(name, id) {
   };
   // beginners Weapons
   this.equipedWeapons = {
-    left: new Game.items.weapons.left[0].item(this.lvl),
-    right: new Game.items.weapons.left[0].item(this.lvl)
+    left: new Game.items.weapons.left[1].item(this.lvl),
+    right: new Game.items.weapons.left[1].item(this.lvl)
   };
   this.items = [];
   // max hp for the player it self

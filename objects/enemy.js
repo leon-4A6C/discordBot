@@ -122,7 +122,7 @@ Enemy.prototype.getDropItems = function() {
 // enemy ai, its mostly random
 Enemy.prototype.doMove = function(opponent) {
   // if low health eat
-  if (this.hp < (this.maxHp/2)) {
+  if (this.hp < (this.maxHp*0.4)) {
     for (var i = 0; i < this.items.length; i++) {
       if (this.items[i].type == "food") {
         this.eat(this.items[i]);

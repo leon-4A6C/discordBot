@@ -28,6 +28,17 @@ var items =
     gloves: [
 
     ]
+    // ring: [
+    //   left: [
+    //
+    //   ],
+    //   right: [
+    //
+    //   ]
+    // ]
+    // amulet: [
+    //
+    // ]
   },
   // all the weapons
   weapons: {
@@ -35,20 +46,36 @@ var items =
       {
         item: Weapon.Hand,
         dropChance: 0
+      },
+      {
+        item: Weapon.HockeyStick,
+        dropChance: 0.45
       }
     ],
     right: [
       {
         item: Weapon.Hand,
         dropChance: 0
+      },
+      {
+        item: Weapon.Bat,
+        dropChance: 0.35
       }
     ]
   },
+  // shield
+  // shield: [
+  //
+  // ],
   // all the different foods
   food: [
     {
       item: Food.Donut,
       dropChance: 0.1
+    },
+    {
+      item: Food.Pizza,
+      dropChance: 0.2
     }
   ]
 };
