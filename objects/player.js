@@ -15,8 +15,8 @@ function Player(name, id) {
   };
   // beginners Weapons
   this.equipedWeapons = {
-    left: new Game.items.weapons.left[1].item(this.lvl),
-    right: new Game.items.weapons.left[1].item(this.lvl)
+    left: new Game.items.weapons.left[0].item(this.lvl),
+    right: new Game.items.weapons.left[0].item(this.lvl)
   };
   this.items = [];
   // max hp for the player it self
@@ -99,6 +99,31 @@ Player.prototype = {
       slot = "right";
     }
     return this.equipedWeapons[slot].actions;
+  },
+  // adds xp and lvls up if needed from enemy or an int
+  // returns an object with lvl if it lvled up and new xp
+  addXp: function(enemy) {
+    var output = {};
+    var lvlThreshold = Math.floor((Math.pow((this.lvl * 2), 2)  + 100) * 2);
+    if (typeof enemy == Object) {
+      this.xp += Math.round(Math.max((enemy.lvl - this.lvl), 1)*(Math.random()*10+1));
+    } else { //xp amount
+      this.xp += enemy;
+    }
+    // check if the player lvled up
+    if (this.xp >= lvlThreshold) {
+      this.lvl++;
+      this.xp -= lvlThreshold;
+      output.lvl = this.lvl;
+    }
+    output.xp = this.xp;
+    // return object with lvl if it lvled up and new xp
+    return output;
+  },
+  // resets all the weapons actions
+  resetWeaponActions: function() {
+    this.equipedWeapons.left.resetActions();
+    this.equipedWeapons.right.resetActions();
   }
 };
 

@@ -3,6 +3,8 @@ var Item = require("./item");
 
 function Armor(targetLvl) {
   this.maxLvl = 5;
+  this.name = "unnamed";
+  this.type = "armor";
   var targetLvlWiggleRoom = Math.floor(Math.random()*targetLvl-targetLvl/2);
   this.lvl = targetLvl + targetLvlWiggleRoom;
   if (this.lvl <= 0) {

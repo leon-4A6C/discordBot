@@ -3,6 +3,7 @@ var Item = require("./item");
 
 function Weapon(targetLvl) {
   this.name = "unnamed";
+  this.type = "weapon";
   this.itemId;
   this.maxLvl = 5;
   var targetLvlWiggleRoom = Math.floor(Math.random()*targetLvl-targetLvl/2);
@@ -47,6 +48,7 @@ Weapon.prototype.resetActions = function() {
 function Hand(targetLvl) {
   this.itemId = 0;
   this.name = "hand";
+  this.type = "weapon";
   this.maxLvl = 5;
   var targetLvlWiggleRoom = Math.floor(Math.random()*targetLvl-targetLvl/2);
   this.lvl = targetLvl + targetLvlWiggleRoom;
@@ -82,6 +84,7 @@ function Hand(targetLvl) {
 function Bat(targetLvl) {
   this.itemId = 2;
   this.name = "Bat";
+  this.type = "weapon";
   this.maxLvl = 10;
   var targetLvlWiggleRoom = Math.floor(Math.random()*targetLvl-targetLvl/2);
   this.lvl = targetLvl + targetLvlWiggleRoom;
@@ -119,6 +122,7 @@ Bat.prototype = Object.create(Weapon.prototype);
 function HockeyStick(targetLvl) {
   this.itemId = 3;
   this.name = "Hockey stick";
+  this.type = "weapon";
   this.maxLvl = 10;
   var targetLvlWiggleRoom = Math.floor(Math.random()*targetLvl-targetLvl/2);
   this.lvl = targetLvl + targetLvlWiggleRoom;

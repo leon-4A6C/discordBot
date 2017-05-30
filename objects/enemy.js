@@ -10,6 +10,7 @@ function Enemy(name, targetLvl) {
     this.lvl = 1;
   }
   this.name = name || "unnamed";
+  this.type = "enemy";
   this.equipedArmor = {
     boots: this.getRandomArmor("boots"),
     pants: this.getRandomArmor("pants"),
