@@ -8,66 +8,76 @@ function prompt(question, callback) {
         stdout = process.stdout;
 
     stdin.resume();
-    stdout.write(question);
+    stdout.write("\n"+question);
 
     stdin.once('data', function (data) {
+      stdout.write("\n");
       callback(data.toString().trim());
     });
 }
 // game state
-var ongoingBattle = false;
+var ongoingPrompt = false;
 var enemy;
 function battle() {
   //game state
-  if (!ongoingBattle) {
-    enemy = new Enemy(null, player.lvl);
-  }
-  ongoingBattle = true;
   var done = false;
-  console.log("battle has begon");
-  console.log(enemy.name + " has " + enemy.totalHp + " HP");
-  var actions = player.getActions("left");
-
-  for (var i = 0; i < actions.length; i++) {
-    var weaponName = player.equipedWeapons.left.name;
-    var actionName = actions[i].name;
-    var usesLeft = actions[i].usage - actions[i].used;
-    var dmg = actions[i].dmg_multiplier * player.equipedWeapons.left.dmg;
-    console.log(i+". "+weaponName ,actionName + " does " + dmg + " damage and has " + usesLeft + " uses left");
+  if (!ongoingPrompt) {
+    console.log("battle has begon");
+    enemy = new Enemy(null, player.lvl);
+    ongoingPrompt = true;
+    console.log(enemy.name + " has " + enemy.hp + " HP");
+    console.log("you have " + player.hp + " HP");
   }
+  prompt("which weapon would you like to use? left or right (left)", (weapon) => {
+    if (!weapon) {
+      weapon = "left";
+    }
+    var actions = player.getActions(weapon);
 
-  prompt("wich one would you like to do?\n", (input) => {
-    var hp = player.attack(enemy, "left", input);
-    if (hp == 0) {
-      done = true;
+    for (var i = 0; i < actions.length; i++) {
+      var weaponName = player.equipedWeapons[weapon].name;
+      var actionName = actions[i].name;
+      var usesLeft = actions[i].usage - actions[i].used;
+      var dmg = actions[i].dmg_multiplier * player.equipedWeapons[weapon].dmg;
+      console.log(i+". "+weaponName ,actionName + " does " + dmg + " damage and has " + usesLeft + " uses left");
     }
-    console.log(enemy.name + " has " + hp + " HP");
-    if (!done) {
-      enemy.doMove(player);
-      console.log("your new hp is " + player.hp);
-      if (player.hp <= 0) {
+
+    prompt("wich one would you like to do?\n", (input) => {
+      var hp = player.attack(enemy, weapon, input);
+      if (hp == 0) {
         done = true;
-        console.log("enemy won the battle!");
-        var info = player.addXp(5); // you always get 5xp
-        if (info.lvl) {
-          console.log("you lvled up you are now lvl. " + info.lvl + " and have " + info.xp + " xp!");
+      }
+      console.log(enemy.name + " has " + hp + " HP");
+      if (!done) {
+        enemy.doMove(player);
+        console.log("your new hp is " + player.hp);
+        if (player.hp <= 0) {
+          done = true;
+          console.log("enemy won the battle!");
+          var info = player.addXp(5); // you always get 5xp
+          console.log("you now are lvl. " + info.lvl + " and have " + info.xp + " xp!");
+          player.resetWeaponActions();
+          enemy = null;
+          ongoingPrompt = false;
+          game();
+        } else {
+          battle();
         }
-        player.resetWeaponActions();
-        ongoingBattle = false;
-        game();
       } else {
-        battle();
-      }
-    } else {
-      console.log("you have won the battle!");
-      var info = player.addXp(enemy);
-      if (info.lvl) {
+        console.log("you have won the battle!");
+        var info = player.addXp(enemy);
+        console.log(info);
         console.log("you lvled up you are now lvl. " + info.lvl + " and have " + info.xp + " xp!");
+        player.resetWeaponActions();
+        for (var i = 0; i < enemy.dropItems.length; i++) {
+          console.log("you got a " + enemy.dropItems[i].name);
+          player.addItem(enemy.dropItems[i]); //add the drop items of the enemy to the player
+        }
+        enemy = null;
+        ongoingPrompt = false;
+        game();
       }
-      player.resetWeaponActions();
-      ongoingBattle = false;
-      game();
-    }
+    });
   });
 }
 game();
@@ -77,18 +87,24 @@ function game() {
       input = "help";
     }
     if (input === "battle") {
-      battle();
+      // TODO: add hp if a time has passed
+      if (player.hp > 0) {
+        battle();
+      } else {
+        console.log("you can't battle your hp is too low, eat something or wait till your hp is restored");
+      }
     }
     if (input === "help") {
-      console.log("battle to battle\nitems get your items\nhelp for help");
+      console.log("battle to battle\nitems get your items\nstats for stats\nhelp for help");
     }
     if (input === "items") {
       if (player.items.length === 0) {
         console.log("you have got no items! get some by battling");
       } else {
+        ongoingPrompt = true;
         var itemText = "";
         for (var i = 0; i < player.items.length; i++) {
-          itemText += i+". "+player.items[i];
+          itemText += i+". "+player.items[i].name;
           if (i % 3 == 0) {
             console.log(itemText);
           }
@@ -106,6 +122,8 @@ function game() {
                   } else {
                     console.log("ok did nothing");
                   }
+                  ongoingPrompt = false;
+                  game();
                 });
               }
               if (player.items[selectedItem].type === "weapon") {
@@ -114,6 +132,8 @@ function game() {
                     input = "left";
                   }
                   player.equipWeapon(player.items[selectedItem], input);
+                  ongoingPrompt = false;
+                  game();
                 });
               }
               if (player.items[selectedItem].type === "harness") {
@@ -131,17 +151,26 @@ function game() {
               if (player.items[selectedItem].type === "helmet") {
                 player.equipArmor(player.items[selectedItem], "helmet");
               }
+              if (player.items[selectedItem].type != "weapon") {
+                ongoingPrompt = false;
+                game();
+              }
             }
             if (input === "drop") {
               player.dropItem(player.items[selectedItem]);
               console.log("dropped the item");
+              ongoingPrompt = false;
+              game();
             }
           });
         });
       }
     }
-    // if not done battling
-    if (!battle) {
+    if (input === "stats") {
+      console.log("your name is: " + player.name + "\nyou have got " + player.xp + " XP\nand are lvl. " + player.lvl + "\n");
+    }
+    // if there is no battle restart the game
+    if (!ongoingPrompt) {
       game();
     }
   });

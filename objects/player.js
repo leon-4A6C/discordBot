@@ -2,7 +2,7 @@ var Game = require("./game");
 // player
 function Player(name, id) {
   // player id from discord user id
-  this.id;
+  this.id = id || "noId";
   this.name = name || "unnamed";
   this.xp = 0;
   this.lvl = 0;
@@ -18,7 +18,10 @@ function Player(name, id) {
     left: new Game.items.weapons.left[0].item(this.lvl),
     right: new Game.items.weapons.left[0].item(this.lvl)
   };
+  // the items of the player
   this.items = [];
+  // the max amount of items a player can have (inventory)
+  this.maxItems = 50;
   // max hp for the player it self
   this.maxHp = 50;
   // hp from the player it self
@@ -40,12 +43,14 @@ Player.prototype = {
     return newOpponentHp
   },
   eat: function(food) {
-    // TODO: eat food
-    // TODO: select food in function somewhere else
+    // add it to the hp
     this.hp += food.hp;
+    // cap it to the max hp
     if (this.hp > this.maxHp) {
       this.hp = this.maxHp;
     }
+    // remove item from items because he ate it
+    this.items.splice(this.items.indexOf(food), 1);
   },
   dropItem: function(item) {
     // drop the item
@@ -80,8 +85,15 @@ Player.prototype = {
     } else if (slot === 1) {
       slot = "right";
     }
+    // if there is an item equiped at that slot return the item to the items
+    if (this.equipedWeapons[slot]) {
+      // push it to the items
+      this.items.push(this.equipedWeapons[slot]);
+    }
     // equip weapon
     this.equipedWeapons[slot] = weapon;
+    // remove item from items/inventory
+    this.items.splice(this.items.indexOf(weapon), 1);
   },
   // take damage, returns new hp from this player
   dmg: function(dmg) {
@@ -124,6 +136,15 @@ Player.prototype = {
   resetWeaponActions: function() {
     this.equipedWeapons.left.resetActions();
     this.equipedWeapons.right.resetActions();
+  },
+  // adds an item to the player in the inventory/items array
+  addItem: function(item) {
+    if (this.items.length < this.maxItems) {
+      this.items.push(item);
+      return true;
+    } else {
+      return false;
+    }
   }
 };
 

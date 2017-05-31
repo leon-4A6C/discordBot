@@ -127,8 +127,6 @@ Enemy.prototype.doMove = function(opponent) {
     for (var i = 0; i < this.items.length; i++) {
       if (this.items[i].type == "food") {
         this.eat(this.items[i]);
-        // remove item, from items because he ate it
-        this.items.splice(i, 1);
         break;
       }
     }
