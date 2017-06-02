@@ -11,40 +11,29 @@ if (!tokens) {
   console.error("use, node install.js, to install");
 }
 const mysql = require('mysql');
-var mysqlConn = mysql.createConnection({
+var mysqlConn = mysql.createPool({
+  connectionLimit : 50, // better be on the safe side
   host: tokens.DBhost || "localhost",
   user: tokens.DBusername || "discord",
   password: tokens.DBpassword || "discord",
   database: tokens.DBname || "DiscordBot"
 });
-var running = false;
-mysqlConn.connect();
+
+// mysqlConn.on('release', function (connection) {
+//   console.log('Connection %d released', connection.threadId);
+// });
 
 mysqlConn.on('error', (err) => {
-  console.log(err);
-  mysqlConn.connect();
+  console.log(err); // if this isn't here it would be a fatal error and the programm would stop
 });
 
 var discordToken = tokens.discord || "TOKEN HERE";
 var cleverbotToken = tokens.cleverbot || "TOKEN HERE";
 
 bot.on('ready', () => {
-  running = true;
   console.log("logged in as " + bot.user.username + "!");
   updateDB();
   bot.user.setGame("help for help");
-});
-
-bot.on("disconnect", (event) => {
-  running = false;
-  // try to reconnect every second when it gets disconnected
-  var interval = setInterval(() => {
-    if (running == true) {
-      clearInterval(interval);
-    } else {
-      bot.login(discordToken);
-    }
-  }, 1000);
 });
 
 // guild events
