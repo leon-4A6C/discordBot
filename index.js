@@ -70,323 +70,331 @@ bot.on("roleUpdate", role => {
 
 // message event
 bot.on("message", msg => {
-  if (!msg.author.bot) { // if this is not here it would respond to itself and other bots, bots would get xp and stuff
-    // update xp and lvl of the user who talked
-    mysqlConn.query("SELECT * FROM user WHERE id = "+ msg.author.id, (error, result, fields) => {
-      mysqlConn.query("SELECT lvl_multiplier FROM server WHERE id = \""+msg.guild.id+"\"", (error, resultGuild, fields) => {
-        var lvlMultiplier = resultGuild[0].lvl_multiplier;
-        var xp = (countWords(msg.content)-countDoubles(msg.content));
-        // clamp it between 0 and 50
-        if (xp < 0) {
-          xp = 0;
-        } else if (xp > 50) {
-          xp = 50
-        }
-        var newXp = result[0].xp + xp;
-        var nextLvlThreshold = Math.floor((Math.pow((result[0].lvl * (lvlMultiplier * 2)), 2)  + 100) * (lvlMultiplier * 2));
-        var newLvl = result[0].lvl;
-        if (newXp >= nextLvlThreshold) {
-          newLvl++;
-          newXp -= nextLvlThreshold;
-          updateRoles(msg.guild);
-          msg.reply("you reached lvl **"+newLvl+"** congrats");
-        }
-        mysqlConn.query("UPDATE user SET xp = "+ newXp +", lvl = "+ newLvl +" WHERE id = "+msg.author.id, (error, result, fields)=>{
-          // console.log(error, result, fields);
-        });
+  if (!msg.guild || msg.author.bot) { // if this is not here it would respond to itself and other bots, bots would get xp and stuff
+    msg.reply("you need to be human and in an guild to use me!");
+    return
+  }
+  // update xp and lvl of the user who talked
+  mysqlConn.query("SELECT * FROM user WHERE id = "+ msg.author.id, (error, result, fields) => {
+    mysqlConn.query("SELECT lvl_multiplier FROM server WHERE id = \""+msg.guild.id+"\"", (error, resultGuild, fields) => {
+      var lvlMultiplier = resultGuild[0].lvl_multiplier;
+      var xp = (countWords(msg.content)-countDoubles(msg.content));
+      // clamp it between 0 and 50
+      if (xp < 0) {
+        xp = 0;
+      } else if (xp > 50) {
+        xp = 50
+      }
+      var newXp = result[0].xp + xp;
+      var nextLvlThreshold = Math.floor((Math.pow((result[0].lvl * (lvlMultiplier * 2)), 2)  + 100) * (lvlMultiplier * 2));
+      var newLvl = result[0].lvl;
+      if (newXp >= nextLvlThreshold) {
+        newLvl++;
+        newXp -= nextLvlThreshold;
+        updateRoles(msg.guild);
+        msg.reply("you reached lvl **"+newLvl+"** congrats");
+      }
+      mysqlConn.query("UPDATE user SET xp = "+ newXp +", lvl = "+ newLvl +" WHERE id = "+msg.author.id, (error, result, fields)=>{
+        // console.log(error, result, fields);
       });
     });
-    if (msg.content === "invite") {
-      bot.generateInvite()
-        .then(link => {
-          msg.channel.send("invite link: "+link);
-        });
-    }
-    if (getWord(msg.content) === "set") {
-      if (msg.member.hasPermission("ADMINISTRATOR")) {
-        if (getWord(msg.content, 1) === "min_lvl") {
-          var role = getWord(msg.content, 2);
-          var lvl = getWord(msg.content, 3);
-          var roles = msg.guild.roles.array();
-          for (var i = 0; i < roles.length; i++) {
-            if (roles[i].name === role) {
-              mysqlConn.query("UPDATE role SET lvl = "+ lvl +" WHERE id = "+roles[i].id, (error, result, fields) => {
-                if (error) {
-                  msg.reply("something went wrong, you probably didn't write the lvl correctly, try again.");
-                } else {
-                  updateRoles(msg.guild);
-                  msg.reply("min_lvl of "+role+" is set to "+lvl);
-                }
-              });
-              var found = true;
-            }
+  });
+  if (msg.content === "invite") {
+    bot.generateInvite()
+      .then(link => {
+        msg.channel.send("invite link: "+link);
+      });
+  }
+  if (getWord(msg.content) === "set") {
+    if (msg.member.hasPermission("ADMINISTRATOR")) {
+      if (getWord(msg.content, 1) === "min_lvl") {
+        var role = getWord(msg.content, 2);
+        var lvl = getWord(msg.content, 3);
+        var roles = msg.guild.roles.array();
+        for (var i = 0; i < roles.length; i++) {
+          if (roles[i].name === role) {
+            mysqlConn.query("UPDATE role SET lvl = "+ lvl +" WHERE id = "+roles[i].id, (error, result, fields) => {
+              if (error) {
+                msg.reply("something went wrong, you probably didn't write the lvl correctly, try again.");
+              } else {
+                updateRoles(msg.guild);
+                msg.reply("min_lvl of "+role+" is set to "+lvl);
+              }
+            });
+            var found = true;
           }
-          if (!found) {
-            msg.reply("invalid name given");
-          }
-        } else if (getWord(msg.content, 1) === "lvl_multiplier") {
-          newMultiplier = getWord(msg.content, 2);
-          mysqlConn.query("UPDATE server SET lvl_multiplier = "+newMultiplier+" WHERE id = \""+msg.guild.id+"\"", (error, result, fields) => {
-            if (error) {
-              console.log(error);
-            }
-            msg.reply("lvl_multiplier is set to "+newMultiplier);
-          });
         }
-      } else {
-        msg.reply("you don't have permissions to do that");
+        if (!found) {
+          msg.reply("invalid name given");
+        }
+      } else if (getWord(msg.content, 1) === "lvl_multiplier") {
+        newMultiplier = getWord(msg.content, 2);
+        mysqlConn.query("UPDATE server SET lvl_multiplier = "+newMultiplier+" WHERE id = \""+msg.guild.id+"\"", (error, result, fields) => {
+          if (error) {
+            console.log(error);
+          }
+          msg.reply("lvl_multiplier is set to "+newMultiplier);
+        });
       }
+    } else {
+      msg.reply("you don't have permissions to do that");
     }
-    if (getWord(msg.content) === "stats") {
-      mysqlConn.query("SELECT xp, lvl FROM user WHERE id = \""+ msg.author.id+"\"", (error, result, fields)=>{
+  }
+  if (getWord(msg.content) === "stats") {
+    mysqlConn.query("SELECT xp, lvl FROM user WHERE id = \""+ msg.author.id+"\"", (error, result, fields)=>{
+      if (msg.guild) {
         mysqlConn.query("SELECT lvl_multiplier FROM server WHERE id = \""+msg.guild.id+"\"", (error, resultGuild, fields) => {
           var lvlMultiplier = resultGuild[0].lvl_multiplier;
           var nextLvlThreshold = Math.floor((Math.pow((result[0].lvl * (lvlMultiplier * 2)), 2)  + 100) * (lvlMultiplier * 2));
           msg.reply("these are your stats: \nxp: " + result[0].xp + "\nlvl: " + result[0].lvl + "\nxp needed for next lvl: " + nextLvlThreshold);
         });
-      });
-    }
-    if (getWord(msg.content) === "leaderboard") {
-      var reply = "";
-      mysqlConn.query("SELECT xp, lvl, username FROM server_has_user INNER JOIN user ON user.id = user_id INNER JOIN server ON server.id = server_id WHERE server.id = \""+msg.guild.id+"\" ORDER BY lvl DESC, xp DESC LIMIT 5", (error, results, fields) => {
+      } else {
+        var lvlMultiplier = 1;
+        var nextLvlThreshold = Math.floor((Math.pow((result[0].lvl * (lvlMultiplier * 2)), 2)  + 100) * (lvlMultiplier * 2));
+        msg.reply("these are your stats: \nxp: " + result[0].xp + "\nlvl: " + result[0].lvl + "\nxp needed for next lvl: " + nextLvlThreshold);
+      }
+    });
+  }
+  if (getWord(msg.content) === "leaderboard") {
+    var reply = "";
+    mysqlConn.query("SELECT xp, lvl, username FROM server_has_user INNER JOIN user ON user.id = user_id INNER JOIN server ON server.id = server_id WHERE server.id = \""+msg.guild.id+"\" ORDER BY lvl DESC, xp DESC LIMIT 5", (error, results, fields) => {
+      if (error) {
+        console.log(error);
+      } else {
+        reply += "\n**top guild**\n";
+        for (var i = 0; i < results.length; i++) {
+          reply += (i+1)+". " + results[i].username + " is lvl: " + results[i].lvl + " and has " + results[i].xp + " xp\n";
+        }
+      }
+      mysqlConn.query("SELECT xp, lvl, username FROM user ORDER BY lvl DESC, xp DESC LIMIT 5", (error, results, fields) => {
         if (error) {
           console.log(error);
         } else {
-          reply += "\n**top guild**\n";
+          reply += "\n**top global**\n";
           for (var i = 0; i < results.length; i++) {
             reply += (i+1)+". " + results[i].username + " is lvl: " + results[i].lvl + " and has " + results[i].xp + " xp\n";
           }
         }
-        mysqlConn.query("SELECT xp, lvl, username FROM user ORDER BY lvl DESC, xp DESC LIMIT 5", (error, results, fields) => {
-          if (error) {
-            console.log(error);
-          } else {
-            reply += "\n**top global**\n";
-            for (var i = 0; i < results.length; i++) {
-              reply += (i+1)+". " + results[i].username + " is lvl: " + results[i].lvl + " and has " + results[i].xp + " xp\n";
-            }
-          }
-          if (reply) {
-            msg.reply(reply);
-          } else {
-            msg.reply("error");
-          }
-        });
-      });
-    }
-    if (getWord(msg.content) === "deleteHistory") {
-      mysqlConn.query("UPDATE user SET botHistory = null WHERE id = \""+msg.author.id+"\"", (error, results, fields) => {
-        if (error) {
-          console.log(error);
+        if (reply) {
+          msg.reply(reply);
         } else {
-          msg.reply("chatbot history has been deleted!");
+          msg.reply("error");
         }
       });
-    }
-    if (getWord(msg.content)==="play") {
-      var url = getWord(msg.content, 1);
-      if (url === getWord(msg.content)) {
-        msg.reply("you did not give me a link");
+    });
+  }
+  if (getWord(msg.content) === "deleteHistory") {
+    mysqlConn.query("UPDATE user SET botHistory = null WHERE id = \""+msg.author.id+"\"", (error, results, fields) => {
+      if (error) {
+        console.log(error);
       } else {
-        var channels = msg.guild.channels.array();
-        var found = false;
-        for (var i = 0; i < channels.length; i++) {
-          if(channels[i].type === "voice" && channels[i].name === "music") {
-            found = true;
-            join(channels[i]);
-          }
-        }
-        if (!found) {
-          msg.guild.createChannel("music", "voice")
-            .then(channel => {
-              msg.channel.send(`Created new channel ${channel}`);
-              join(channel);
-            })
-            .catch(console.error);
-        }
-        function join(channel) {
-          channel.join()
-          .then(connection => {
-            msg.channel.send('Connected!');
-            var video = youtubedl(url, ["--format=18"], {cwd:__dirname});
-            var filename = "";
-            if (!fs.existsSync("./tmp")){
-              fs.mkdirSync("./tmp");
-            }
-            video.on("info", function(info) {
-              filename = info._filename;
-              filename = filename.substr(filename.length-15, filename.length);
-              filename = filename.substr(0, filename.length-4);
-              video.pipe(fs.createWriteStream("./tmp/"+filename+".mp4"));
-              msg.channel.send("downloading!");
-            });
-            video.on("end", function() {
-              console.log("done downloading!");
-              ffmpeg("./tmp/"+filename+".mp4")
-                .toFormat("mp3")
-                .on("error", function(error) {
-                  console.error(error);
-                })
-                .on("end", function() {
-                  console.log("done! converting!");
-                  fs.unlink("./tmp/"+filename+".mp4", function() {
-                    console.log("done!");
-                  });
-                  const dispatcher = connection.playFile(__dirname+"/tmp/"+filename+".mp3", {volume:1});
-                  msg.channel.send("playing!");
-                })
-                .save("./tmp/"+filename+".mp3");
-            });
-          })
-          .catch(console.error);
-        }
+        msg.reply("chatbot history has been deleted!");
       }
-    }
-    if (getWord(msg.content)==="stop") {
-      // TODO: stop music and delete music
+    });
+  }
+  if (getWord(msg.content)==="play") {
+    var url = getWord(msg.content, 1);
+    if (url === getWord(msg.content)) {
+      msg.reply("you did not give me a link");
+    } else {
       var channels = msg.guild.channels.array();
+      var found = false;
       for (var i = 0; i < channels.length; i++) {
         if(channels[i].type === "voice" && channels[i].name === "music") {
-          channels[i].leave();
-          msg.channel.send('Disconnected!');
+          found = true;
+          join(channels[i]);
         }
       }
-    }
-    if (contains("ping", msg.content)) {
-      msg.channel.send("pong");
-    }
-    if (contains("marco", msg.content)) {
-      msg.channel.send("polo");
-    }
-    if (msg.content === "help") {
-      var message = "";
-      message += "__**test bot 2.0 help**__";
-      for (var i = 0; i < helpFile.length; i++) {
-        message+="\n\n***"+helpFile[i].title+"***\ncommand: `"+helpFile[i].command+"`\n*"+helpFile[i].description+"*";
-      }
-      msg.author.send(message);
-    }
-    if (getWord(msg.content) === "spam") {
-      var mentions = msg.mentions.users.array();
-      var amount = between("-", msg.content);
-      var message = between('"', msg.content);
-      if (msg.mentions.everyone === true) {
-        msg.channel.send("everyone is being spammed!");
-        for (var i = 0; i < msg.guild.members.array().length; i++) {
-          if (!msg.guild.members.array()[i].user.bot) {
-            for (var j = 0; j < amount; j++) {
-              msg.guild.members.array()[i].send(message).catch(console.error);
-            }
-          }
-        }
-      }
-      if (msg.mentions.roles.array()[0]) {
-        for (var i = 0; i < msg.mentions.roles.array().length; i++) {
-          msg.channel.send("everyone in "+msg.mentions.roles.array()[i].name+" is being spammed!");
-          for (var j = 0; j < msg.mentions.roles.array()[i].members.array().length; j++) {
-            if (!msg.mentions.roles.array()[i].members.array()[j].user.bot) {
-              for (var k = 0; k < amount; k++) {
-                msg.mentions.roles.array()[i].members.array()[j].send(message).catch(console.error);
-              }
-            }
-          }
-        }
-      }
-      for (var i = 0; i < mentions.length; i++) {
-        msg.channel.send(mentions[i].username +  " is being spammed!");
-        for (var j = 0; j < amount; j++) {
-          mentions[i].send(message);
-        }
-      }
-    }
-    if (msg.mentions.users.array()[0]) {
-      try {
-        if (msg.mentions.users.array()[0].id === bot.user.id) {
-          mysqlConn.query("SELECT botHistory FROM user WHERE id = \""+msg.author.id+"\"", (error, results, fields) => {
-            var cs = '';
-            if (results[0].botHistory != null || results[0].botHistory != "null") {
-              cs = results[0].botHistory;
-            }
-            // creates new cleverbot and gives it the api key and history if the user has it
-            var cleverbot = new Cleverbot({key: cleverbotToken, cs: cs});
-            cleverbot.say(between('"', msg.content), (output, error) => {
-              if (error) {
-                console.log(error);
-              }else {
-                msg.reply(output);
-                // updates history on DB
-                mysqlConn.query("UPDATE user SET botHistory = \""+cleverbot.options.cs+"\" WHERE id = \""+msg.author.id+"\"", (error, results, fields) => {
-                  if (error) {
-                    console.log(error);
-                  } else {
-                    cleverbot = null;
-                  }
-                });
-              }
-            });
-          });
-        }
-      } catch (e) {
-        console.log(e);
-      }
-    }
-    if (getWord(msg.content) == "deleteMessages") {
-      var name = getWord(msg.content, 1);
-      if (name == getWord(msg.content, 0)) {
-        name = msg.channel.name;
-      }
-      var guild = msg.guild;
-      guild.createChannel('new-'+name, 'text')
-        .then(channel => {
-          channel.send(`Created new channel ${channel}`);
-          msg.channel.delete()
-            .then(console.log("channel deleted")) // success
-            .catch(console.error); // log error
-          channel.setName(name)
-            .then(newChannel => console.log(`Channel's new name is ${newChannel.name}`))
-            .catch(console.error);
-        })
-        .catch(console.error);
-    }
-    if (getWord(msg.content) == "abort") {
-      var name = getWord(msg.content, 1);
-      msg.channel.delete()
-        .then(console.log("channel deleted")) // success
-        .catch(console.error); // log error
-    }
-    if (getWord(msg.content) == "create") {
-      var name = getWord(msg.content, 1);
-      if (name == getWord(msg.content, 0)) {
-        msg.reply("give me a name as second parameter!");
-      } else {
-        msg.guild.createChannel(name, 'text')
-          .then(channel => channel.send(`successfuly created ${channel}`))
+      if (!found) {
+        msg.guild.createChannel("music", "voice")
+          .then(channel => {
+            msg.channel.send(`Created new channel ${channel}`);
+            join(channel);
+          })
           .catch(console.error);
       }
+      function join(channel) {
+        channel.join()
+        .then(connection => {
+          msg.channel.send('Connected!');
+          var video = youtubedl(url, ["--format=18"], {cwd:__dirname});
+          var filename = "";
+          if (!fs.existsSync("./tmp")){
+            fs.mkdirSync("./tmp");
+          }
+          video.on("info", function(info) {
+            filename = info._filename;
+            filename = filename.substr(filename.length-15, filename.length);
+            filename = filename.substr(0, filename.length-4);
+            video.pipe(fs.createWriteStream("./tmp/"+filename+".mp4"));
+            msg.channel.send("downloading!");
+          });
+          video.on("end", function() {
+            console.log("done downloading!");
+            ffmpeg("./tmp/"+filename+".mp4")
+              .toFormat("mp3")
+              .on("error", function(error) {
+                console.error(error);
+              })
+              .on("end", function() {
+                console.log("done! converting!");
+                fs.unlink("./tmp/"+filename+".mp4", function() {
+                  console.log("done!");
+                });
+                const dispatcher = connection.playFile(__dirname+"/tmp/"+filename+".mp3", {volume:1});
+                msg.channel.send("playing!");
+              })
+              .save("./tmp/"+filename+".mp3");
+          });
+        })
+        .catch(console.error);
+      }
     }
-    if (msg.content === "test") {
-      console.log(msg);
+  }
+  if (getWord(msg.content)==="stop") {
+    // TODO: stop music and delete music
+    var channels = msg.guild.channels.array();
+    for (var i = 0; i < channels.length; i++) {
+      if(channels[i].type === "voice" && channels[i].name === "music") {
+        channels[i].leave();
+        msg.channel.send('Disconnected!');
+      }
     }
-    if (contains("cat", msg.content) || contains("miauw", msg.content) || contains("pussy", msg.content) || contains("poekie", msg.content)) {
-      var url = 'http://random.cat/meow';
-
-      http.get(url, function(res){
-        var body = '';
-
-        res.on('data', function(chunk){
-          body += chunk;
+  }
+  if (contains("ping", msg.content)) {
+    msg.channel.send("pong");
+  }
+  if (contains("marco", msg.content)) {
+    msg.channel.send("polo");
+  }
+  if (msg.content === "help") {
+    var message = "";
+    message += "__**test bot 2.0 help**__";
+    for (var i = 0; i < helpFile.length; i++) {
+      message+="\n\n***"+helpFile[i].title+"***\ncommand: `"+helpFile[i].command+"`\n*"+helpFile[i].description+"*";
+    }
+    msg.author.send(message);
+  }
+  if (getWord(msg.content) === "spam") {
+    var mentions = msg.mentions.users.array();
+    var amount = between("-", msg.content);
+    var message = between('"', msg.content);
+    if (msg.mentions.everyone === true) {
+      msg.channel.send("everyone is being spammed!");
+      for (var i = 0; i < msg.guild.members.array().length; i++) {
+        if (!msg.guild.members.array()[i].user.bot) {
+          for (var j = 0; j < amount; j++) {
+            msg.guild.members.array()[i].send(message).catch(console.error);
+          }
+        }
+      }
+    }
+    if (msg.mentions.roles.array()[0]) {
+      for (var i = 0; i < msg.mentions.roles.array().length; i++) {
+        msg.channel.send("everyone in "+msg.mentions.roles.array()[i].name+" is being spammed!");
+        for (var j = 0; j < msg.mentions.roles.array()[i].members.array().length; j++) {
+          if (!msg.mentions.roles.array()[i].members.array()[j].user.bot) {
+            for (var k = 0; k < amount; k++) {
+              msg.mentions.roles.array()[i].members.array()[j].send(message).catch(console.error);
+            }
+          }
+        }
+      }
+    }
+    for (var i = 0; i < mentions.length; i++) {
+      msg.channel.send(mentions[i].username +  " is being spammed!");
+      for (var j = 0; j < amount; j++) {
+        mentions[i].send(message);
+      }
+    }
+  }
+  if (msg.mentions.users.array()[0]) {
+    try {
+      if (msg.mentions.users.array()[0].id === bot.user.id) {
+        mysqlConn.query("SELECT botHistory FROM user WHERE id = \""+msg.author.id+"\"", (error, results, fields) => {
+          var cs = '';
+          if (results[0].botHistory != null || results[0].botHistory != "null") {
+            cs = results[0].botHistory;
+          }
+          // creates new cleverbot and gives it the api key and history if the user has it
+          var cleverbot = new Cleverbot({key: cleverbotToken, cs: cs});
+          cleverbot.say(between('"', msg.content), (output, error) => {
+            if (error) {
+              console.log(error);
+            }else {
+              msg.reply(output);
+              // updates history on DB
+              mysqlConn.query("UPDATE user SET botHistory = \""+cleverbot.options.cs+"\" WHERE id = \""+msg.author.id+"\"", (error, results, fields) => {
+                if (error) {
+                  console.log(error);
+                } else {
+                  cleverbot = null;
+                }
+              });
+            }
+          });
         });
+      }
+    } catch (e) {
+      console.log(e);
+    }
+  }
+  if (getWord(msg.content) == "deleteMessages") {
+    var name = getWord(msg.content, 1);
+    if (name == getWord(msg.content, 0)) {
+      name = msg.channel.name;
+    }
+    var guild = msg.guild;
+    guild.createChannel('new-'+name, 'text')
+      .then(channel => {
+        channel.send(`Created new channel ${channel}`);
+        msg.channel.delete()
+          .then(console.log("channel deleted")) // success
+          .catch(console.error); // log error
+        channel.setName(name)
+          .then(newChannel => console.log(`Channel's new name is ${newChannel.name}`))
+          .catch(console.error);
+      })
+      .catch(console.error);
+  }
+  if (getWord(msg.content) == "abort") {
+    var name = getWord(msg.content, 1);
+    msg.channel.delete()
+      .then(console.log("channel deleted")) // success
+      .catch(console.error); // log error
+  }
+  if (getWord(msg.content) == "create") {
+    var name = getWord(msg.content, 1);
+    if (name == getWord(msg.content, 0)) {
+      msg.reply("give me a name as second parameter!");
+    } else {
+      msg.guild.createChannel(name, 'text')
+        .then(channel => channel.send(`successfuly created ${channel}`))
+        .catch(console.error);
+    }
+  }
+  if (msg.content === "test") {
+    console.log(msg);
+  }
+  if (contains("cat", msg.content) || contains("miauw", msg.content) || contains("pussy", msg.content) || contains("poekie", msg.content)) {
+    var url = 'http://random.cat/meow';
 
-        res.on('end', function(){
-          var response = JSON.parse(body);
-          console.log("Got a response: ", response.file);
-          msg.channel.send(response.file);
-        });
-      }).on('error', function(e){
-        console.error("Got an error: ", e);
+    http.get(url, function(res){
+      var body = '';
+
+      res.on('data', function(chunk){
+        body += chunk;
       });
-    }
-  } // end of if not bot check
+
+      res.on('end', function(){
+        var response = JSON.parse(body);
+        console.log("Got a response: ", response.file);
+        msg.channel.send(response.file);
+      });
+    }).on('error', function(e){
+      console.error("Got an error: ", e);
+    });
+  }
 });
 
 bot.login(discordToken);
