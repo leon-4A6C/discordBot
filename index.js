@@ -12,7 +12,7 @@ if (!tokens) {
 }
 const mysql = require('mysql');
 var mysqlConn = mysql.createPool({
-  connectionLimit : 50, // better be on the safe side
+  connectionLimit : 150, // better be on the safe side
   host: tokens.DBhost || "localhost",
   user: tokens.DBusername || "discord",
   password: tokens.DBpassword || "discord",
@@ -397,8 +397,16 @@ function updateDB() {
   for (var i = 0; i < guilds.length; i++) {
     (function(guildCount) {
       mysqlConn.query("SELECT id FROM server WHERE id = \""+guilds[guildCount].id+"\"", (error, results, fields) =>{
+        if (error) {
+          console.log(error);
+          return
+        }
         if (results.length == 0) {
           mysqlConn.query("INSERT INTO server(id, name) VALUES (\""+guilds[guildCount].id+"\", \""+guilds[guildCount].name+"\")", (error, results, fields) => {
+            if (error) {
+              console.log(error);
+              return
+            }
             // console.log(error, results, fields);
           });
         } else {
@@ -409,17 +417,30 @@ function updateDB() {
       for (var i = 0; i < users.length; i++) {
         (function(userCount) {
           mysqlConn.query("SELECT id FROM user WHERE id = \""+users[userCount].user.id+"\"", (error, results, fields) =>{
+            if (error) {
+              console.log(error);
+              return
+            }
             if (results.length == 0) {
               mysqlConn.query("INSERT INTO user(id, username) VALUES (\""+users[userCount].user.id+"\", \""+users[userCount].user.username+"\")", (error, results, fields) => {
+                if (error) {
+                  console.log(error);
+                  return
+                }
                 // console.log(error, results, fields);
               });
             }
             mysqlConn.query("SELECT user_id, server_id FROM server_has_user WHERE user_id = \""+users[userCount].user.id + "\" AND server_id = \""+guilds[guildCount].id+"\"", (error, results, fields) =>{
               if (error) {
                 console.log(error);
+                return
               }
               if (results.length == 0) {
                 mysqlConn.query("INSERT INTO server_has_user(server_id, user_id) VALUES (\""+guilds[guildCount].id+"\", \""+users[userCount].user.id+"\")", (error, results, fields) => {
+                  if (error) {
+                    console.log(error);
+                    return
+                  }
                   // console.log(error, results, fields);
                 });
               }
@@ -434,11 +455,20 @@ function updateDB() {
           mysqlConn.query("SELECT id FROM role WHERE id = \""+role.id+"\"", (error, results, fields) =>{
             if (error) {
               console.log(error);
+              return
             }
             if (results.length == 0 && role.id != guilds[guildCount].defaultRole.id) {
               mysqlConn.query("INSERT INTO role(id, name) VALUES (\""+role.id+"\", \""+role.name+"\")", (error, results, fields) => {
+                if (error) {
+                  console.log(error);
+                  return
+                }
                 // console.log(error, results, fields);
                 mysqlConn.query("INSERT INTO server_has_role(server_id, role_id) VALUES (\""+guilds[guildCount].id+"\", \""+role.id+"\")", (error, results, fields) => {
+                  if (error) {
+                    console.log(error);
+                    return
+                  }
                   // console.log(error, results, fields);
                 });
               });
