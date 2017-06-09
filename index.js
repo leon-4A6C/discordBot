@@ -71,7 +71,9 @@ bot.on("roleUpdate", role => {
 // message event
 bot.on("message", msg => {
   if (!msg.guild || msg.author.bot) { // if this is not here it would respond to itself and other bots, bots would get xp and stuff
-    msg.reply("you need to be human and in an guild to use me!");
+    if (!msg.author.bot) {
+      msg.reply("you need to in a guild to use me!");
+    }
     return
   }
   // update xp and lvl of the user who talked
